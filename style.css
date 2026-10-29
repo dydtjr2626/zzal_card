@@ -17,7 +17,7 @@ body {
     background-color: var(--bg-color);
     color: var(--text-main);
     height: 100vh;
-    overflow: hidden; /* 전체 스크롤 방지 */
+    overflow: hidden;
 }
 
 .app-container {
@@ -25,13 +25,13 @@ body {
     height: 100%;
     padding: 20px;
     gap: 20px;
-    max-width: 1400px;
+    max-width: 1600px; /* 전체 최대 넓이 확장 */
     margin: 0 auto;
 }
 
-/* --- 좌측 보드 영역 --- */
+/* --- 좌측 보드 영역 (비율 축소) --- */
 .board-area {
-    flex: 1;
+    flex: 0 0 380px; /* 고정 너비로 변경하여 우측 공간 확보 */
     background: var(--panel-bg);
     border-radius: 12px;
     padding: 24px;
@@ -90,11 +90,12 @@ body {
 .card h3 { font-size: 16px; margin-bottom: 4px; }
 .card p { font-size: 13px; color: var(--text-sub); }
 
-/* --- 우측 사이드바 (제어판) --- */
+/* --- 우측 사이드바 (대폭 확장) --- */
 .sidebar {
-    width: 420px;
+    flex: 1; /* 남은 공간 모두 차지 */
     display: flex;
     flex-direction: column;
+    min-width: 500px;
 }
 
 .panel {
@@ -104,6 +105,8 @@ body {
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     height: 100%;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
 .panel h2 {
@@ -113,11 +116,38 @@ body {
     border-bottom: 1px solid var(--border-color);
 }
 
-/* --- 캔버스 (미리보기) --- */
+/* --- 비율 조절 컨트롤러 (신규) --- */
+.aspect-ratio-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-sub);
+}
+
+.ratio-btn {
+    padding: 6px 12px;
+    background: #E4E6EB;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    font-weight: bold;
+    color: var(--text-sub);
+}
+
+.ratio-btn.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* --- 캔버스 (미리보기) 대폭 확장 --- */
 .canvas-container {
     position: relative;
     width: 100%;
-    height: 220px;
+    height: 400px; /* 높이 대폭 증가 */
     background: #E9ECEF;
     border: 1px dashed #CED4DA;
     border-radius: 8px;
@@ -128,6 +158,7 @@ body {
     margin-bottom: 24px;
     background-size: cover;
     background-position: center;
+    transition: aspect-ratio 0.3s ease; /* 비율 변경 애니메이션 */
 }
 
 .canvas-image {
@@ -148,6 +179,7 @@ body {
     pointer-events: none;
     z-index: 10;
     white-space: nowrap;
+    transform: translate(-50%, -50%); /* JS에서 위치 잡기 편하도록 CSS로 이동 */
 }
 
 /* --- 컨트롤러 UI --- */

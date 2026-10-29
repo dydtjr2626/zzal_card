@@ -27,7 +27,7 @@
                 <div class="card" id="card-2" onclick="selectCard('card-2')">
                     <span class="card-badge">Card 2</span>
                     <h3>화면과 파일의 일치</h3>
-                    <p>세 화면에서 미리보기와 내려받은 파일을 대조합니다.</p>
+                    <p>세 화면에서 미리보기와 내려받은 파일을 대조합니다. (1:1, 4:5, 9:16)</p>
                 </div>
 
                 <!-- 카드 3 -->
@@ -53,12 +53,20 @@
             </div>
         </main>
 
-        <!-- 우측: 컨트롤 및 미리보기 영역 -->
+        <!-- 우측: 컨트롤 및 미리보기 영역 (넓어짐) -->
         <aside class="sidebar">
             <div class="panel">
                 <h2 id="panel-title">미리보기 및 제어판</h2>
                 
-                <!-- 공통 캔버스 (미리보기) -->
+                <!-- [추가] Card 2 비율 테스트용 컨트롤러 -->
+                <div class="aspect-ratio-controls">
+                    <span>화면 비율:</span>
+                    <button class="ratio-btn active" onclick="changeRatio('1/1', this)">1:1</button>
+                    <button class="ratio-btn" onclick="changeRatio('4/5', this)">4:5</button>
+                    <button class="ratio-btn" onclick="changeRatio('9/16', this)">9:16</button>
+                </div>
+
+                <!-- 공통 캔버스 (미리보기) - 크기 대폭 확장 -->
                 <div class="canvas-container" id="canvas-area">
                     <img id="preview-img" class="canvas-image" src="" alt="Preview" style="display:none;">
                     <span id="preview-text" class="canvas-text">텍스트를 입력하세요</span>
@@ -78,7 +86,7 @@
                         <input type="text" id="text-input" placeholder="문구를 입력하세요" oninput="updateText(event)">
                     </div>
 
-                    <!-- [추가] 직관적인 Bar 형태 컨트롤러 -->
+                    <!-- 직관적인 Bar 형태 컨트롤러 -->
                     <div class="control-group">
                         <label>문구 크기 (Size) <span id="size-val">24px</span></label>
                         <input type="range" id="size-slider" min="10" max="80" value="24" oninput="updateTextStyle()">
