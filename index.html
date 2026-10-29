@@ -22,10 +22,10 @@
             <div class="canvas-wrapper">
                 <div class="canvas-container" id="canvas-area">
                     <img id="preview-img" class="canvas-image" src="" alt="Preview" style="display:none;">
-                    <!-- 텍스트 컨테이너: 초기에 절대 보이지 않음 -->
-                    <div id="preview-text-container" class="text-container">
-                        <span id="preview-text" class="canvas-text"></span>
-                    </div>
+                    
+                    <!-- [수정] 여러 개의 텍스트가 추가될 컨테이너 영역 -->
+                    <div id="text-layer" class="text-layer"></div>
+                    
                     <span id="placeholder-text" class="placeholder">이미지 없음</span>
                 </div>
             </div>
@@ -40,13 +40,12 @@
                 <div class="control-group">
                     <label>텍스트 편집</label>
                     <div style="display: flex; gap: 8px;">
-                        <!-- 버튼 ID 부여 -->
                         <button id="btn-add-text" class="btn-secondary" style="flex: 1; white-space: nowrap;">+ 텍스트 추가</button>
-                        <input type="text" id="text-input" placeholder="문구를 입력하세요" disabled style="flex: 3;">
                     </div>
                     <div class="validation-msg" id="text-msg"></div>
                 </div>
 
+                <!-- [수정] 위치 조절 슬라이더 삭제, 크기/줌/색상만 남김 -->
                 <div class="sliders">
                     <div class="control-group" style="grid-column: span 2;">
                         <label>사진 확대 / 축소 (Zoom) <span id="zoom-val">100%</span></label>
@@ -54,20 +53,13 @@
                     </div>
 
                     <div class="control-group">
-                        <label>문구 크기 <span id="size-val">24px</span></label>
-                        <input type="range" id="size-slider" min="10" max="80" value="24" oninput="updateTextStyle()">
+                        <label>선택된 문구 크기 <span id="size-val">24px</span></label>
+                        <input type="range" id="size-slider" min="10" max="80" value="24" oninput="updateSelectedTextStyle()">
                     </div>
+                    
                     <div class="control-group">
-                        <label>가로 위치 <span id="pos-x-val">50%</span></label>
-                        <input type="range" id="pos-x-slider" min="0" max="100" value="50" oninput="updateTextStyle()">
-                    </div>
-                    <div class="control-group">
-                        <label>세로 위치 <span id="pos-y-val">50%</span></label>
-                        <input type="range" id="pos-y-slider" min="0" max="100" value="50" oninput="updateTextStyle()">
-                    </div>
-                    <div class="control-group">
-                        <label>문구 색상</label>
-                        <input type="color" id="color-input" value="#ffffff" oninput="updateTextStyle()">
+                        <label>선택된 문구 색상</label>
+                        <input type="color" id="color-input" value="#ffffff" oninput="updateSelectedTextStyle()">
                     </div>
                 </div>
                 

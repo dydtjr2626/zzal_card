@@ -5,32 +5,86 @@ let templates = [
 ];
 
 let isDragging = false;
-let currentXPercent = 50, currentYPercent = 50;
+let activeTextElement = null; // 현재 선택된 텍스트
+let dragStartX = 0, dragStartY = 0;
+let initialLeft = 0, initialTop = 0;
 
-// DOM이 로드되면 모든 이벤트 리스너 연결
 document.addEventListener('DOMContentLoaded', () => {
     initCard3Inputs();
     renderTemplates();
-    setupDragAndDrop();
-    setupEventListeners(); // 이벤트 리스너 연결 함수 호출
+    setupEventListeners();
 });
 
 // ==========================================
-// 이벤트 리스너 설정 (버튼 및 입력창)
+// 이벤트 리스너 설정
 // ==========================================
 function setupEventListeners() {
-    // 1. 이미지 업로드 이벤트
     document.getElementById('image-upload').addEventListener('change', handleImageUpload);
-
-    // 2. '+ 텍스트 추가' 버튼 클릭 이벤트 (확실한 연결)
     document.getElementById('btn-add-text').addEventListener('click', addText);
 
-    // 3. 텍스트 입력창 입력 이벤트
-    document.getElementById('text-input').addEventListener('input', updateText);
+    // 마우스 드래그 이벤트 (캔버스 전체 영역에 등록)
+    const canvasArea = document.getElementById('canvas-area');
+    
+    canvasArea.addEventListener('mousedown', (e) => {
+        // 드래그 가능한 텍스트를 클릭했을 때만 작동
+        if (e.target.classList.contains('draggable-text')) {
+            activeTextElement = e.target;
+            selectText(activeTextElement);
+            
+            isDragging = true;
+            const rect = activeTextElement.getBoundingClientRect();
+            const canvasRect = canvasArea.getBoundingClientRect();
+            
+            // 마우스 클릭 지점과 요소의 좌상단 간의 거리 계산
+            dragStartX = e.clientX - rect.left;
+            dragStartY = e.clientY - rect.top;
+            
+            // 현재 요소의 % 위치 저장
+            initialLeft = parseFloat(activeTextElement.style.left) || 50;
+            initialTop = parseFloat(activeTextElement.style.top) || 50;
+
+            e.preventDefault(); // 텍스트 선택(파란색 블록) 방지
+        } else {
+            // 빈 공간 클릭 시 선택 해제
+            deselectAll();
+        }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging || !activeTextElement) return;
+
+        const canvasRect = canvasArea.getBoundingClientRect();
+        
+        // 마우스 위치에서 클릭 오프셋을 빼서 실제 텍스트의 좌상단 위치 계산
+        let newX = e.clientX - canvasRect.left - dragStartX;
+        let newY = e.clientY - canvasRect.top - dragStartY;
+
+        // 퍼센트로 변환
+        let newLeftPercent = (newX / canvasRect.width) * 100;
+        let newTopPercent = (newY / canvasRect.height) * 100;
+
+        // 캔버스 영역 밖으로 나가지 않도록 제한 (옵션: 0~100%)
+        // transform: translate(-50%, -50%) 이므로 텍스트의 중심이 캔버스 밖으로 나가지 않게 함
+        if (newLeftPercent < 0) newLeftPercent = 0;
+        if (newLeftPercent > 100) newLeftPercent = 100;
+        if (newTopPercent < 0) newTopPercent = 0;
+        if (newTopPercent > 100) newTopPercent = 100;
+
+        activeTextElement.style.left = `${newLeftPercent}%`;
+        activeTextElement.style.top = `${newTopPercent}%`;
+    });
+
+    document.addEventListener('mouseup', () => {
+        isDragging = false;
+    });
+
+    // 텍스트 내용 수정 시 스타일 동기화 (선택된 텍스트의 크기/색상 슬라이더 업데이트)
+    document.getElementById('size-slider').addEventListener('input', updateSelectedTextStyle);
+    document.getElementById('color-input').addEventListener('input', updateSelectedTextStyle);
 }
 
 // ==========================================
-// [Card 1, 2] 에디터, 이미지 및 드래그 제어
+// [Card 1, 2] 이미지 및 텍스트 제어
 // ==========================================
 function changeRatio(ratio, btn) {
     document.querySelectorAll('.ratio-btn').forEach(b => b.classList.remove('active'));
@@ -48,9 +102,6 @@ function handleImageUpload(event) {
     const imgEl = document.getElementById('preview-img');
     const phEl = document.getElementById('placeholder-text');
     const zoomSlider = document.getElementById('zoom-slider');
-    const textContainer = document.getElementById('preview-text-container');
-    const textInput = document.getElementById('text-input');
-    const textEl = document.getElementById('preview-text');
 
     if (!file) return;
 
@@ -70,35 +121,23 @@ function handleImageUpload(event) {
         imgEl.style.display = 'block';
         imgEl.classList.add('loaded');
         
-        // 줌 초기화
         zoomSlider.value = 100;
         imgEl.style.transform = 'scale(1)';
         document.getElementById('zoom-val').textContent = '100%';
         phEl.style.display = 'none';
-        
-        // [핵심] 새로운 이미지를 올리면 텍스트 상자를 무조건 숨기고 초기화
-        textContainer.classList.remove('show');
-        textEl.textContent = "";
-        textInput.value = "";
-        textInput.disabled = true;
-        
-        // 텍스트 위치도 초기 중앙으로 리셋
-        currentXPercent = 50;
-        currentYPercent = 50;
-        textContainer.style.left = `50%`;
-        textContainer.style.top = `50%`;
-        document.getElementById('pos-x-slider').value = 50;
-        document.getElementById('pos-y-slider').value = 50;
-        document.getElementById('pos-x-val').textContent = '50%';
-        document.getElementById('pos-y-val').textContent = '50%';
     }
     reader.readAsDataURL(file);
 }
 
-// 텍스트 추가 버튼 로직
+function updateImageZoom() {
+    const zoomVal = document.getElementById('zoom-slider').value;
+    const imgEl = document.getElementById('preview-img');
+    document.getElementById('zoom-val').textContent = `${zoomVal}%`;
+    imgEl.style.transform = `scale(${zoomVal / 100})`;
+}
+
+// 여러 개의 텍스트 추가
 function addText() {
-    const textContainer = document.getElementById('preview-text-container');
-    const textInput = document.getElementById('text-input');
     const imgEl = document.getElementById('preview-img');
     const textMsg = document.getElementById('text-msg');
 
@@ -109,94 +148,93 @@ function addText() {
     }
 
     textMsg.textContent = "";
-    textContainer.classList.add('show'); // 텍스트 상자 보이기
-    textInput.disabled = false;          // 입력창 활성화
-    textInput.focus();                   // 입력창에 커서 위치
+    const textLayer = document.getElementById('text-layer');
+
+    // 새로운 텍스트 요소 생성
+    const newText = document.createElement('div');
+    newText.className = 'draggable-text';
+    newText.contentEditable = "true"; // 브라우저 내에서 바로 수정 가능
+    newText.innerText = "텍스트 입력";
     
-    // 만약 텍스트가 비어있다면 스타일 적용을 위해 빈 칸으로 둡니다.
-    // 사용자가 입력을 시작하면 바로 반영됩니다.
+    // 초기 위치 (중앙)
+    newText.style.left = '50%';
+    newText.style.top = '50%';
+    
+    // 현재 슬라이더 값 적용
+    const currentSize = document.getElementById('size-slider').value;
+    const currentColor = document.getElementById('color-input').value;
+    newText.style.fontSize = `${currentSize}px`;
+    newText.style.color = currentColor;
+
+    // 텍스트를 클릭하면 선택 상태로 만들기
+    newText.addEventListener('click', (e) => {
+        e.stopPropagation(); // 이벤트 버블링 방지
+        selectText(newText);
+    });
+
+    // 텍스트 수정 완료 시 (엔터키 등) 포커스 해제
+    newText.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            newText.blur();
+        }
+    });
+
+    textLayer.appendChild(newText);
+    selectText(newText); // 추가하자마자 선택 상태로
 }
 
-function updateImageZoom() {
-    const zoomVal = document.getElementById('zoom-slider').value;
-    const imgEl = document.getElementById('preview-img');
-    document.getElementById('zoom-val').textContent = `${zoomVal}%`;
-    imgEl.style.transform = `scale(${zoomVal / 100})`;
+// 특정 텍스트 선택
+function selectText(element) {
+    deselectAll();
+    activeTextElement = element;
+    element.classList.add('selected');
+    
+    // 현재 선택된 텍스트의 스타일을 슬라이더에 동기화
+    const currentSize = parseInt(element.style.fontSize) || 24;
+    const currentColor = element.style.color;
+    
+    document.getElementById('size-slider').value = currentSize;
+    document.getElementById('size-val').textContent = `${currentSize}px`;
+    
+    // 색상 값을 hex로 변환하여 input[type="color"]에 적용
+    if (currentColor) {
+        // rgb -> hex 변환 로직 (간단한 예시, 실제로는 더 복잡할 수 있음)
+        const dummy = document.createElement('div');
+        dummy.style.color = currentColor;
+        document.body.appendChild(dummy);
+        const computedColor = window.getComputedStyle(dummy).color;
+        document.body.removeChild(dummy);
+
+        const rgb = computedColor.match(/\d+/g);
+        if (rgb) {
+            const hex = "#" + ((1 << 24) + (parseInt(rgb[0]) << 16) + (parseInt(rgb[1]) << 8) + parseInt(rgb[2])).toString(16).slice(1);
+            document.getElementById('color-input').value = hex;
+        }
+    }
 }
 
-// 텍스트 입력 시 즉시 반영
-function updateText(event) {
-    const textEl = document.getElementById('preview-text');
-    // 입력한 그대로 반영 (강제 문구 없음)
-    textEl.textContent = event.target.value; 
+// 모든 텍스트 선택 해제
+function deselectAll() {
+    document.querySelectorAll('.draggable-text').forEach(el => el.classList.remove('selected'));
+    activeTextElement = null;
 }
 
-function updateTextStyle() {
+// 선택된 텍스트의 스타일 업데이트 (크기, 색상)
+function updateSelectedTextStyle() {
+    if (!activeTextElement) return;
+
     const size = document.getElementById('size-slider').value;
-    const posX = document.getElementById('pos-x-slider').value;
-    const posY = document.getElementById('pos-y-slider').value;
     const color = document.getElementById('color-input').value;
 
     document.getElementById('size-val').textContent = `${size}px`;
-    document.getElementById('pos-x-val').textContent = `${posX}%`;
-    document.getElementById('pos-y-val').textContent = `${posY}%`;
 
-    const textEl = document.getElementById('preview-text');
-    textEl.style.fontSize = `${size}px`;
-    textEl.style.color = color;
-
-    currentXPercent = posX;
-    currentYPercent = posY;
-    
-    const textContainer = document.getElementById('preview-text-container');
-    textContainer.style.left = `${currentXPercent}%`;
-    textContainer.style.top = `${currentYPercent}%`;
-}
-
-// 마우스 드래그 앤 드롭
-function setupDragAndDrop() {
-    const textContainer = document.getElementById('preview-text-container');
-    const canvasArea = document.getElementById('canvas-area');
-    const posXSlider = document.getElementById('pos-x-slider');
-    const posYSlider = document.getElementById('pos-y-slider');
-
-    textContainer.addEventListener('mousedown', (e) => {
-        // 텍스트 컨테이너가 보일 때만 드래그 가능
-        if (!textContainer.classList.contains('show')) return;
-        isDragging = true;
-        e.preventDefault(); 
-    });
-
-    document.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-
-        const canvasRect = canvasArea.getBoundingClientRect();
-        let mouseX = e.clientX - canvasRect.left;
-        let mouseY = e.clientY - canvasRect.top;
-
-        mouseX = Math.max(0, Math.min(mouseX, canvasRect.width));
-        mouseY = Math.max(0, Math.min(mouseY, canvasRect.height));
-
-        currentXPercent = (mouseX / canvasRect.width) * 100;
-        currentYPercent = (mouseY / canvasRect.height) * 100;
-
-        textContainer.style.left = `${currentXPercent}%`;
-        textContainer.style.top = `${currentYPercent}%`;
-
-        posXSlider.value = Math.round(currentXPercent);
-        posYSlider.value = Math.round(currentYPercent);
-        
-        document.getElementById('pos-x-val').textContent = `${posXSlider.value}%`;
-        document.getElementById('pos-y-val').textContent = `${posYSlider.value}%`;
-    });
-
-    document.addEventListener('mouseup', () => {
-        isDragging = false;
-    });
+    activeTextElement.style.fontSize = `${size}px`;
+    activeTextElement.style.color = color;
 }
 
 function downloadPreview() {
-    alert("현재 화면 비율, 사진 줌 상태, 텍스트 스타일 및 드래그 위치 그대로 파일이 다운로드됩니다.");
+    alert("현재 화면 비율, 사진 줌 상태, 모든 텍스트 위치 그대로 파일이 다운로드됩니다.");
 }
 
 
@@ -286,40 +324,50 @@ function deleteTemplate(id) {
 // ==========================================
 function loadValidJson() {
     const validData = {
-        text: "JSON에서 복원된 텍스트",
-        color: "#2ECC71",
-        size: "36",
-        x: "50",
-        y: "50",
+        texts: [
+            { text: "JSON에서 복원된 텍스트 1", color: "#2ECC71", size: "36", x: "30", y: "30" },
+            { text: "두 번째 텍스트", color: "#E74C3C", size: "24", x: "70", y: "70" }
+        ],
         zoom: "100",
         image: "https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=800&auto=format&fit=crop"
     };
     
-    document.getElementById('text-input').value = validData.text;
-    document.getElementById('text-input').disabled = false;
-    document.getElementById('color-input').value = validData.color;
-    document.getElementById('size-slider').value = validData.size;
-    document.getElementById('pos-x-slider').value = validData.x;
-    document.getElementById('pos-y-slider').value = validData.y;
-    
-    document.getElementById('zoom-slider').value = validData.zoom;
-    updateImageZoom(); 
-    updateTextStyle();
-
+    // 이미지 및 줌 초기화
     const imgEl = document.getElementById('preview-img');
     imgEl.src = validData.image;
     imgEl.style.display = 'block';
     imgEl.classList.add('loaded');
     document.getElementById('placeholder-text').style.display = 'none';
     
-    // JSON 복원 시에만 텍스트 상자 표시 및 내용 적용
-    const textContainer = document.getElementById('preview-text-container');
-    const textEl = document.getElementById('preview-text');
-    textContainer.classList.add('show');
-    textEl.textContent = validData.text;
+    document.getElementById('zoom-slider').value = validData.zoom;
+    updateImageZoom(); 
+
+    // 기존 텍스트 모두 지우기
+    const textLayer = document.getElementById('text-layer');
+    textLayer.innerHTML = '';
+    deselectAll();
+
+    // JSON 데이터로 텍스트 복원
+    validData.texts.forEach(t => {
+        const newText = document.createElement('div');
+        newText.className = 'draggable-text';
+        newText.contentEditable = "true";
+        newText.innerText = t.text;
+        newText.style.left = `${t.x}%`;
+        newText.style.top = `${t.y}%`;
+        newText.style.fontSize = `${t.size}px`;
+        newText.style.color = t.color;
+
+        newText.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selectText(newText);
+        });
+        
+        textLayer.appendChild(newText);
+    });
 
     const msgEl = document.getElementById('card5-msg');
-    msgEl.textContent = "✅ 정상 JSON 복원 완료. (텍스트 및 줌 상태 포함)";
+    msgEl.textContent = "✅ 정상 JSON 복원 완료. (다중 텍스트 포함)";
     msgEl.className = "validation-msg success";
 }
 
