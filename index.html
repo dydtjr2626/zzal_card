@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>짤 카드 스튜디오 (Zal Card Studio)</title>
-    <!-- CSS 파일 연결 -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,7 +15,7 @@
         <!-- 카드 1: 편집 및 미리보기 -->
         <div class="card">
             <h2>1. 짤 편집 및 미리보기</h2>
-            <p class="desc">이미지를 드래그하거나 클릭해서 업로드하세요.</p>
+            <p class="desc">이미지를 드래그하거나 클릭해서 업로드하고 텍스트를 꾸며보세요.</p>
             
             <div class="preview-area" id="previewContainer">
                 <span id="previewPlaceholder" style="color: #aaa;">이미지를 드래그 앤 드롭 하세요</span>
@@ -34,7 +33,7 @@
                 <input type="text" id="captionInput" placeholder="여기에 짤 캡션을 입력하세요..." style="margin-bottom: 10px;">
                 <div class="style-row">
                     <input type="color" id="textColor" value="#ffffff" title="글자 색상">
-                    <input type="range" id="textSize" min="12" max="60" value="24" title="글자 크기">
+                    <input type="range" id="textSize" min="12" max="80" value="24" title="글자 크기">
                     <select id="fontFamily">
                         <option value="'Pretendard', sans-serif">기본 폰트</option>
                         <option value="'궁서', serif">궁서체</option>
@@ -66,7 +65,7 @@
                 <div class="layout-item" data-ratio="9:16">9:16 스토리</div>
             </div>
             <div style="display: flex; gap: 10px; align-items: center; margin-top: 20px;">
-                <!-- Canvas를 이용한 진짜 다운로드 -->
+                <!-- 실제 이미지 다운로드 버튼 -->
                 <button class="btn-primary" id="saveFileBtn" style="flex: 2;">이미지 다운로드 (PNG)</button>
                 <button class="btn-secondary" id="resetRatioBtn" style="flex: 1;">비율 초기화</button>
             </div>
@@ -92,24 +91,8 @@
                 <button class="btn-primary" id="addTemplateBtn" style="width: 80px;">생성</button>
             </div>
         </div>
-
-        <!-- 카드 5: JSON 분석 및 손상 처리 -->
-        <div class="card full-width">
-            <h2>5. JSON 분석 및 손상 처리</h2>
-            <p class="desc">아래 JSON 데이터를 수정하여 정상 데이터 혹은 손상된 데이터를 테스트해보세요.</p>
-            <textarea id="jsonInput" class="json-area">
-{
-  "id": "img_001",
-  "url": "https://example.com/image.jpg",
-  "caption": "정상적인 캡션입니다."
-}
-            </textarea>
-            <button class="btn-primary" id="analyzeJsonBtn" style="width: 200px; margin-bottom: 15px;">JSON 분석 실행</button>
-            <div id="jsonResult" class="error-log">대기 중...</div>
-        </div>
     </div>
 
-    <!-- JS 파일 연결 -->
     <script src="script.js"></script>
 </body>
 </html>

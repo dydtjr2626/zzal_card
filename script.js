@@ -1,5 +1,5 @@
 // ==========================================
-// 0. 다크모드 토글 & 초기 설정
+// 0. 다크모드 토글
 // ==========================================
 const themeToggle = document.getElementById('themeToggle');
 themeToggle.addEventListener('click', () => {
@@ -122,7 +122,7 @@ document.getElementById('resetRatioBtn').addEventListener('click', function() {
     previewContainer.style.aspectRatio = '1/1';
 });
 
-// [추가된 핵심 기능] Canvas를 이용한 진짜 이미지 다운로드
+// [핵심 기능] Canvas를 이용한 진짜 이미지 다운로드
 document.getElementById('saveFileBtn').addEventListener('click', function() {
     if (!currentImageFile) {
         alert('이미지를 먼저 업로드해주세요.');
@@ -132,7 +132,7 @@ document.getElementById('saveFileBtn').addEventListener('click', function() {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     
-    // 비율에 따른 캔버스 크기 설정 (해상도 최적화)
+    // 비율에 따른 캔버스 크기 설정 (고화질)
     let canvasWidth, canvasHeight;
     if (currentRatio === '1:1') { canvasWidth = 1080; canvasHeight = 1080; }
     else if (currentRatio === '4:5') { canvasWidth = 1080; canvasHeight = 1350; }
@@ -285,44 +285,3 @@ window.loadTemplate = function(id) {
     if (template) alert(`'${template.name}' 템플릿을 불러왔습니다. (시뮬레이션)`);
 };
 renderTemplates();
-
-// ==========================================
-// 카드 5: JSON 분석 및 손상 처리
-// ==========================================
-document.getElementById('analyzeJsonBtn').addEventListener('click', function() {
-    const input = document.getElementById('jsonInput').value;
-    const resultDiv = document.getElementById('jsonResult');
-    resultDiv.innerHTML = '';
-    resultDiv.style.background = '';
-    resultDiv.style.borderColor = '';
-    resultDiv.style.color = '';
-    
-    try {
-        const parsed = JSON.parse(input);
-        
-        let infoHtml = `<strong>✅ 정상 JSON 데이터입니다.</strong><br>`;
-        infoHtml += `- ID: ${parsed.id || '없음'}<br>`;
-        infoHtml += `- URL: ${parsed.url || '없음'}<br>`;
-        infoHtml += `- 캡션: ${parsed.caption || '없음'}<br>`;
-        
-        let errors = [];
-        if (!parsed.id) errors.push('id 필드 누락');
-        if (!parsed.url) errors.push('url 필드 누락');
-        if (parsed.caption && parsed.caption.includes('에러')) errors.push('캡션 내 금지어 포함');
-        
-        if (errors.length > 0) {
-            infoHtml += `<br><strong>⚠️ 데이터 무결성 오류 발견:</strong><ul>`;
-            errors.forEach(err => infoHtml += `<li>${err}</li>`);
-            infoHtml += `</ul>`;
-        } else {
-            infoHtml += `<br><strong>✅ 무결성 검사 통과</strong>`;
-            resultDiv.style.background = 'rgba(0, 255, 0, 0.1)';
-            resultDiv.style.borderColor = 'rgba(0, 255, 0, 0.3)';
-            resultDiv.style.color = '#00aa55';
-        }
-        resultDiv.innerHTML = infoHtml;
-        
-    } catch (e) {
-        resultDiv.innerHTML = `<strong>❌ JSON 문법 오류</strong><br>${e.message}`;
-    }
-});
