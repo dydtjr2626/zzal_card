@@ -4,15 +4,13 @@ let templates = [
     { id: 3, name: "이벤트 홍보" }
 ];
 
-// 드래그 상태 관리를 위한 변수
 let isDragging = false;
-let dragStartX = 0, dragStartY = 0;
-let currentXPercent = 50, currentYPercent = 50; // 현재 텍스트 위치 (%)
+let currentXPercent = 50, currentYPercent = 50;
 
 document.addEventListener('DOMContentLoaded', () => {
     initCard3Inputs();
     renderTemplates();
-    setupDragAndDrop(); // 드래그 앤 드롭 이벤트 초기화
+    setupDragAndDrop();
 });
 
 // ==========================================
@@ -53,44 +51,44 @@ function handleImageUpload(event) {
         imgEl.style.display = 'block';
         imgEl.classList.add('loaded');
         
+        // 줌 초기화
         zoomSlider.value = 100;
         imgEl.style.transform = 'scale(1)';
         document.getElementById('zoom-val').textContent = '100%';
-
         phEl.style.display = 'none';
         
-        // 텍스트는 버튼을 눌러야 나오므로 여기서는 숨김 처리 유지
+        // [수정] 이미지가 새로 들어오면 기존 텍스트는 지우고 숨김
         document.getElementById('preview-text-container').classList.remove('show');
+        document.getElementById('preview-text').textContent = "";
+        document.getElementById('text-input').value = "";
+        document.getElementById('text-input').disabled = true;
     }
     reader.readAsDataURL(file);
 }
 
-// [추가] 텍스트 추가 버튼 로직
+// 텍스트 추가 버튼 로직
 function addText() {
     const textContainer = document.getElementById('preview-text-container');
     const textInput = document.getElementById('text-input');
     const imgEl = document.getElementById('preview-img');
+    const textMsg = document.getElementById('text-msg');
 
-    // 이미지가 없으면 경고 (사진 위에 텍스트를 올리는 것이므로)
     if (imgEl.style.display === 'none') {
-        document.getElementById('text-msg').textContent = "⚠️ 먼저 이미지를 업로드해주세요.";
-        document.getElementById('text-msg').className = "validation-msg error";
+        textMsg.textContent = "⚠️ 먼저 이미지를 업로드해주세요.";
+        textMsg.className = "validation-msg error";
         return;
     }
 
-    document.getElementById('text-msg').textContent = "";
-    
-    // 텍스트 상자 보이기
+    textMsg.textContent = "";
     textContainer.classList.add('show');
-    
-    // 입력창 활성화 및 포커스
     textInput.disabled = false;
     textInput.focus();
     
-    // 초기 텍스트가 없으면 기본값 세팅
+    // 텍스트가 없으면 비어있는 상태로 두지 않고 기본값 적용 (원하시면 빈칸으로 두셔도 됩니다)
     if (textInput.value.trim() === "") {
-        textInput.value = "텍스트를 입력하세요";
+        textInput.value = "새로운 텍스트";
         document.getElementById('preview-text').textContent = textInput.value;
+        updateTextStyle(); // 스타일 즉시 적용
     }
 }
 
@@ -103,7 +101,7 @@ function updateImageZoom() {
 
 function updateText(event) {
     const textEl = document.getElementById('preview-text');
-    textEl.textContent = event.target.value || "텍스트를 입력하세요";
+    textEl.textContent = event.target.value;
 }
 
 function updateTextStyle() {
@@ -120,7 +118,6 @@ function updateTextStyle() {
     textEl.style.fontSize = `${size}px`;
     textEl.style.color = color;
 
-    // 슬라이더 조작 시 드래그 좌표 변수도 업데이트
     currentXPercent = posX;
     currentYPercent = posY;
     
@@ -129,7 +126,7 @@ function updateTextStyle() {
     textContainer.style.top = `${currentYPercent}%`;
 }
 
-// [추가] 마우스 드래그 앤 드롭 로직
+// 마우스 드래그 앤 드롭 로직
 function setupDragAndDrop() {
     const textContainer = document.getElementById('preview-text-container');
     const canvasArea = document.getElementById('canvas-area');
@@ -137,45 +134,30 @@ function setupDragAndDrop() {
     const posYSlider = document.getElementById('pos-y-slider');
 
     textContainer.addEventListener('mousedown', (e) => {
-        // 텍스트 상자가 보이지 않으면 드래그 불가
         if (!textContainer.classList.contains('show')) return;
-        
         isDragging = true;
-        
-        // 마우스가 캔버스 내에서 시작한 좌표 기록
-        const canvasRect = canvasArea.getBoundingClientRect();
-        dragStartX = e.clientX - canvasRect.left;
-        dragStartY = e.clientY - canvasRect.top;
-        
-        e.preventDefault(); // 기본 드래그(이미지 끌기 등) 방지
+        e.preventDefault(); 
     });
 
     document.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
 
         const canvasRect = canvasArea.getBoundingClientRect();
-        
-        // 마우스 이동 거리 계산
         let mouseX = e.clientX - canvasRect.left;
         let mouseY = e.clientY - canvasRect.top;
 
-        // 캔버스 영역을 벗어나지 않도록 제한 (0% ~ 100%)
         mouseX = Math.max(0, Math.min(mouseX, canvasRect.width));
         mouseY = Math.max(0, Math.min(mouseY, canvasRect.height));
 
-        // 퍼센트 값으로 변환
         currentXPercent = (mouseX / canvasRect.width) * 100;
         currentYPercent = (mouseY / canvasRect.height) * 100;
 
-        // 텍스트 위치 업데이트
         textContainer.style.left = `${currentXPercent}%`;
         textContainer.style.top = `${currentYPercent}%`;
 
-        // 슬라이더 값도 동기화 (반올림 처리)
         posXSlider.value = Math.round(currentXPercent);
         posYSlider.value = Math.round(currentYPercent);
         
-        // 슬라이더 라벨 텍스트 업데이트
         document.getElementById('pos-x-val').textContent = `${posXSlider.value}%`;
         document.getElementById('pos-y-val').textContent = `${posYSlider.value}%`;
     });
@@ -286,7 +268,7 @@ function loadValidJson() {
     };
     
     document.getElementById('text-input').value = validData.text;
-    document.getElementById('text-input').disabled = false; // 입력창 활성화
+    document.getElementById('text-input').disabled = false;
     document.getElementById('color-input').value = validData.color;
     document.getElementById('size-slider').value = validData.size;
     document.getElementById('pos-x-slider').value = validData.x;
@@ -294,7 +276,6 @@ function loadValidJson() {
     
     document.getElementById('zoom-slider').value = validData.zoom;
     updateImageZoom(); 
-
     updateTextStyle();
 
     const imgEl = document.getElementById('preview-img');
@@ -303,7 +284,7 @@ function loadValidJson() {
     imgEl.classList.add('loaded');
     document.getElementById('placeholder-text').style.display = 'none';
     
-    // 텍스트 상자 및 텍스트 내용 표시
+    // JSON 복원 시에만 텍스트 상자 표시
     const textContainer = document.getElementById('preview-text-container');
     const textEl = document.getElementById('preview-text');
     textContainer.classList.add('show');
