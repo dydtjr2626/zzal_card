@@ -78,33 +78,49 @@ body {
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    transition: all 0.3s ease; /* 비율 변경 시 부드러운 전환 */
+    transition: all 0.3s ease;
 }
 
 .canvas-image {
     position: absolute; 
+    top: 0;
+    left: 0;
     width: 100%; 
     height: 100%;
-    object-fit: cover; /* [핵심] 비율 변경 시 이미지가 찌그러지지 않고 중앙 기준으로 잘림(자르기) */
+    object-fit: cover; 
     opacity: 0; 
-    transition: opacity 0.3s, transform 0.1s ease-out; /* 줌 효과 부드럽게 */
-    transform-origin: center center; /* 중앙 기준 확대/축소 */
+    transition: opacity 0.3s, transform 0.1s ease-out;
+    transform-origin: center center;
+    transform: scale(1);
+    z-index: 1;
 }
 .canvas-image.loaded { opacity: 1; }
 
-.canvas-text {
+/* [수정] 텍스트를 감싸는 컨테이너 - 마우스 드래그 가능하게 변경 */
+.text-container {
     position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    cursor: grab; /* 마우스 커서를 잡는 모양으로 변경 */
+    display: none; /* 기본 숨김 */
+    user-select: none; /* 드래그 시 텍스트 블록 지정 방지 */
+}
+.text-container:active {
+    cursor: grabbing; /* 드래그 중일 때 커서 */
+}
+.text-container.show {
+    display: block;
+}
+
+.canvas-text {
     font-weight: bold;
     text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
-    pointer-events: none;
-    z-index: 10;
     white-space: nowrap;
-    transform: translate(-50%, -50%);
-    display: none;
 }
-.canvas-text.show { display: block; }
 
-.placeholder { color: #999; font-weight: bold; }
+.placeholder { color: #999; font-weight: bold; z-index: 0; }
 
 /* --- 에디터 컨트롤러 --- */
 .editor-controls { display: flex; flex-direction: column; gap: 16px; }
@@ -115,10 +131,10 @@ input[type="text"], input[type="file"] {
     padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; outline: none;
 }
 input[type="text"]:focus { border-color: var(--primary); }
+input[type="text"]:disabled { background: #eee; cursor: not-allowed; }
 
 .sliders { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
-/* 슬라이더 (Bar) 디자인 */
 input[type="range"] {
     appearance: none;
     -webkit-appearance: none; 
@@ -169,11 +185,9 @@ button {
 .btn-danger { background: var(--danger); color: white; }
 .btn-secondary { background: #E4E6EB; color: var(--text-main); }
 
-/* Card 3 */
 .multi-input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
 .multi-input-grid input { padding: 8px; font-size: 12px; }
 
-/* Card 4 */
 .template-create { display: flex; gap: 8px; margin-bottom: 12px; }
 .template-create input { flex: 1; }
 .template-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
@@ -184,11 +198,9 @@ button {
 .template-actions { display: flex; gap: 4px; }
 .template-actions button { padding: 4px 8px; font-size: 12px; }
 
-/* Card 5 */
 .json-controls { display: flex; gap: 8px; }
 .json-controls button { flex: 1; }
 
-/* 공통 */
 .validation-msg { font-size: 12px; margin-top: 8px; min-height: 16px; font-weight: bold; }
 .error { color: var(--danger); }
 .success { color: var(--success); }

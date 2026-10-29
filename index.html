@@ -8,7 +8,6 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- 좌측: 메인 에디터 영역 -->
         <main class="editor-area">
             <header class="header">
                 <h2>Card Studio Editor</h2>
@@ -21,15 +20,17 @@
             </header>
 
             <div class="canvas-wrapper">
-                <!-- 캔버스 (미리보기) -->
+                <!-- 캔버스 (미리보기) - 마우스 드래그 이벤트 추가 -->
                 <div class="canvas-container" id="canvas-area">
                     <img id="preview-img" class="canvas-image" src="" alt="Preview" style="display:none;">
-                    <span id="preview-text" class="canvas-text">텍스트를 입력하세요</span>
+                    <!-- 텍스트 상자 (초기엔 숨김) -->
+                    <div id="preview-text-container" class="text-container">
+                        <span id="preview-text" class="canvas-text">텍스트를 입력하세요</span>
+                    </div>
                     <span id="placeholder-text" class="placeholder">이미지 없음</span>
                 </div>
             </div>
 
-            <!-- 편집 컨트롤러 -->
             <div class="editor-controls">
                 <div class="control-group">
                     <label>이미지 업로드 (PNG/JPEG 전용)</label>
@@ -37,13 +38,17 @@
                     <div class="validation-msg" id="file-msg"></div>
                 </div>
 
+                <!-- [추가] 텍스트 추가 버튼 및 입력창 -->
                 <div class="control-group">
-                    <label>문구 입력</label>
-                    <input type="text" id="text-input" placeholder="문구를 입력하세요" oninput="updateText(event)">
+                    <label>텍스트 편집</label>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn-secondary" onclick="addText()" style="flex: 1; white-space: nowrap;">+ 텍스트 추가</button>
+                        <input type="text" id="text-input" placeholder="문구를 입력하세요" oninput="updateText(event)" disabled style="flex: 3;">
+                    </div>
+                    <div class="validation-msg" id="text-msg"></div>
                 </div>
 
                 <div class="sliders">
-                    <!-- [추가] 이미지 줌(확대/축소) 슬라이더 -->
                     <div class="control-group" style="grid-column: span 2;">
                         <label>사진 확대 / 축소 (Zoom) <span id="zoom-val">100%</span></label>
                         <input type="range" id="zoom-slider" min="100" max="300" value="100" oninput="updateImageZoom()">
@@ -71,7 +76,6 @@
             </div>
         </main>
 
-        <!-- 우측: 데이터 및 관리 영역 -->
         <aside class="sidebar">
             <section class="panel">
                 <h3>다중 입력 검사 (12건)</h3>
