@@ -4,388 +4,112 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>짤 카드 스튜디오 (Zal Card Studio)</title>
-    <style>
-        :root {
-            --primary-blue: #0055ff;
-            --bg-color: #f4f7f9;
-            --card-bg: #ffffff;
-            --text-main: #333333;
-            --text-sub: #888888;
-            --border-color: #e0e6ed;
-            --shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-            --radius-lg: 20px;
-            --radius-md: 12px;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); padding: 40px 20px; display: flex; justify-content: center; }
-        
-        .studio-container { width: 100%; max-width: 1000px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-        @media (max-width: 768px) { .studio-container { grid-template-columns: 1fr; } }
-
-        .card { background: var(--card-bg); border-radius: var(--radius-lg); padding: 25px; box-shadow: var(--shadow); }
-        h2 { font-size: 18px; margin-bottom: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-        h2::before { content: ''; display: inline-block; width: 4px; height: 18px; background: var(--primary-blue); border-radius: 2px; }
-        .desc { font-size: 13px; color: var(--text-sub); margin-bottom: 20px; line-height: 1.5; }
-
-        button { cursor: pointer; border: none; border-radius: var(--radius-md); font-weight: 600; transition: all 0.2s; }
-        .btn-primary { background: var(--primary-blue); color: white; padding: 12px 20px; width: 100%; }
-        .btn-primary:hover { background: #0044cc; }
-        .btn-secondary { background: #eef2f6; color: var(--text-main); padding: 8px 12px; font-size: 13px; }
-        .btn-secondary:hover { background: #dce4ec; }
-        .btn-danger { background: #ffeded; color: #ff3333; padding: 8px 12px; font-size: 13px; }
-        
-        input[type="text"], textarea, select { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-md); font-size: 14px; outline: none; transition: border 0.2s; }
-        input[type="text"]:focus, textarea:focus { border-color: var(--primary-blue); }
-        
-        .file-input-wrapper { position: relative; overflow: hidden; display: inline-block; width: 100%; }
-        .file-input-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
-        .upload-box { border: 2px dashed var(--border-color); border-radius: var(--radius-md); padding: 20px; text-align: center; color: var(--text-sub); font-size: 13px; }
-
-        .preview-area { width: 100%; height: 200px; background: #f8fafc; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 15px; border: 1px solid var(--border-color); position: relative; }
-        .preview-area img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .preview-text-overlay { position: absolute; color: white; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); font-weight: bold; font-size: 20px; pointer-events: none; text-align: center; padding: 0 10px; word-break: break-all; }
-
-        .layout-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
-        .layout-item { border: 2px solid var(--border-color); border-radius: var(--radius-md); padding: 10px; text-align: center; cursor: pointer; font-size: 12px; color: var(--text-sub); }
-        .layout-item.active { border-color: var(--primary-blue); color: var(--primary-blue); background: #f0f5ff; }
-
-        .extreme-test-area { background: #fafafa; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 15px; margin-bottom: 15px; max-height: 200px; overflow-y: auto; }
-        .test-log { font-size: 12px; color: var(--text-sub); margin-bottom: 5px; font-family: monospace; }
-        .test-log.fail { color: #ff3333; }
-        .test-log.pass { color: #00aa55; }
-
-        .template-list { margin-bottom: 15px; }
-        .template-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid var(--border-color); font-size: 14px; }
-        .template-item:last-child { border-bottom: none; }
-        .template-actions { display: flex; gap: 5px; }
-
-        .json-area { width: 100%; height: 150px; font-family: monospace; font-size: 12px; margin-bottom: 15px; background: #1e1e1e; color: #d4d4d4; padding: 10px; border-radius: var(--radius-md); border: none; resize: none; }
-        .error-log { background: #fff0f0; border: 1px solid #ffcccc; padding: 15px; border-radius: var(--radius-md); font-size: 13px; color: #cc0000; min-height: 80px; }
-        .error-log ul { padding-left: 20px; margin-top: 5px; }
-    </style>
+    <!-- CSS 파일 연결 -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="studio-container">
-    <!-- 카드 1 -->
-    <div class="card">
-        <h2>1. 짤 편집 및 미리보기</h2>
-        <p class="desc">이미지를 업로드하고 텍스트(캡션)를 추가하거나 필터를 적용해보세요.</p>
-        <div class="preview-area" id="previewContainer">
-            <span id="previewPlaceholder" style="color: #aaa;">이미지가 없습니다</span>
-            <img id="previewImage" src="" alt="미리보기" style="display: none;">
-        </div>
-        <div class="file-input-wrapper" style="margin-bottom: 15px;">
-            <div class="upload-box" id="uploadText">클릭하여 이미지 업로드 (JPEG, PNG)</div>
-            <input type="file" id="imageInput" accept="image/jpeg, image/png">
-        </div>
-        <input type="text" id="captionInput" placeholder="여기에 짤 캡션(텍스트)을 입력하세요..." style="margin-bottom: 15px;">
-        <div style="display: flex; gap: 10px;">
-            <select id="filterSelect" style="flex: 1;">
-                <option value="none">필터 없음</option>
-                <option value="grayscale(100%)">흑백</option>
-                <option value="sepia(100%)">세피아</option>
-                <option value="blur(2px)">블러</option>
-            </select>
-            <button class="btn-primary" id="applyBtn" style="flex: 1;">적용하기</button>
-        </div>
-        <div id="missingImageError" style="color: red; font-size: 12px; margin-top: 10px; display: none;">이미지를 먼저 업로드해주세요.</div>
-    </div>
+    <!-- 다크모드 토글 버튼 -->
+    <button id="themeToggle" class="theme-toggle" title="다크모드 전환">🌙</button>
 
-    <!-- 카드 2 -->
-    <div class="card">
-        <h2>2. 화면과 파일의 일치</h2>
-        <p class="desc">비율(1:1, 4:5, 9:16)을 선택하면 미리보기 영역이 변경됩니다.</p>
-        <div class="layout-grid">
-            <div class="layout-item active" data-ratio="1:1">1:1 정방형</div>
-            <div class="layout-item" data-ratio="4:5">4:5 인스타</div>
-            <div class="layout-item" data-ratio="9:16">9:16 스토리</div>
-        </div>
-        <div style="display: flex; gap: 10px; align-items: center; margin-top: 20px;">
-            <button class="btn-primary" id="saveFileBtn" style="flex: 2;">현재 화면 그대로 저장하기</button>
-            <button class="btn-secondary" id="resetRatioBtn" style="flex: 1;">비율 초기화</button>
-        </div>
-    </div>
+    <div class="studio-container">
+        <!-- 카드 1: 편집 및 미리보기 -->
+        <div class="card">
+            <h2>1. 짤 편집 및 미리보기</h2>
+            <p class="desc">이미지를 드래그하거나 클릭해서 업로드하세요.</p>
+            
+            <div class="preview-area" id="previewContainer">
+                <span id="previewPlaceholder" style="color: #aaa;">이미지를 드래그 앤 드롭 하세요</span>
+                <img id="previewImage" src="" alt="미리보기" style="display: none;">
+                <div id="textOverlay" class="preview-text-overlay" style="display: none;"></div>
+            </div>
+            
+            <div class="file-input-wrapper" style="margin-bottom: 15px;">
+                <div class="upload-box" id="uploadText">클릭하여 이미지 업로드 (JPEG, PNG)</div>
+                <input type="file" id="imageInput" accept="image/jpeg, image/png">
+            </div>
 
-    <!-- 카드 3 -->
-    <div class="card">
-        <h2>3. 극단 입력 12건 테스트</h2>
-        <p class="desc">빈 값, 초과 텍스트, 깨진 이모지 등 12건의 극단 입력을 테스트합니다.</p>
-        <div class="extreme-test-area" id="testLogContainer">
-            <div class="test-log">테스트를 실행해주세요.</div>
-        </div>
-        <button class="btn-primary" id="runExtremeTestBtn">극단 입력 12건 테스트 실행</button>
-    </div>
+            <!-- 텍스트 스타일링 컨트롤러 -->
+            <div class="text-controls">
+                <input type="text" id="captionInput" placeholder="여기에 짤 캡션을 입력하세요..." style="margin-bottom: 10px;">
+                <div class="style-row">
+                    <input type="color" id="textColor" value="#ffffff" title="글자 색상">
+                    <input type="range" id="textSize" min="12" max="60" value="24" title="글자 크기">
+                    <select id="fontFamily">
+                        <option value="'Pretendard', sans-serif">기본 폰트</option>
+                        <option value="'궁서', serif">궁서체</option>
+                        <option value="'Impact', sans-serif">Impact (영문)</option>
+                        <option value="monospace">고정폭</option>
+                    </select>
+                </div>
+            </div>
 
-    <!-- 카드 4 -->
-    <div class="card">
-        <h2>4. 템플릿 CRUD 관리</h2>
-        <p class="desc">자주 쓰는 템플릿을 생성, 수정, 삭제하고 다시 불러올 수 있습니다.</p>
-        <div class="template-list" id="templateList"></div>
-        <div style="display: flex; gap: 10px;">
-            <input type="text" id="newTemplateInput" placeholder="새 템플릿 이름 (3개 이상)">
-            <button class="btn-primary" id="addTemplateBtn" style="width: 80px;">생성</button>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <select id="filterSelect" style="flex: 1;">
+                    <option value="none">필터 없음</option>
+                    <option value="grayscale(100%)">흑백</option>
+                    <option value="sepia(100%)">세피아</option>
+                    <option value="blur(2px)">블러</option>
+                </select>
+                <button class="btn-primary" id="applyBtn" style="flex: 1;">적용하기</button>
+            </div>
+            <div id="missingImageError" class="error-msg" style="display: none;">이미지를 먼저 업로드해주세요.</div>
         </div>
-    </div>
 
-    <!-- 카드 5 -->
-    <div class="card" style="grid-column: 1 / -1;">
-        <h2>5. JSON 분석 및 손상 처리</h2>
-        <p class="desc">아래 JSON 데이터를 수정하여 정상 데이터 혹은 손상된 데이터를 테스트해보세요.</p>
-        <textarea id="jsonInput" class="json-area">
+        <!-- 카드 2: 화면과 파일의 일치 -->
+        <div class="card">
+            <h2>2. 화면과 파일의 일치</h2>
+            <p class="desc">비율(1:1, 4:5, 9:16)을 선택하면 미리보기 영역이 변경됩니다.</p>
+            <div class="layout-grid">
+                <div class="layout-item active" data-ratio="1:1">1:1 정방형</div>
+                <div class="layout-item" data-ratio="4:5">4:5 인스타</div>
+                <div class="layout-item" data-ratio="9:16">9:16 스토리</div>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; margin-top: 20px;">
+                <!-- Canvas를 이용한 진짜 다운로드 -->
+                <button class="btn-primary" id="saveFileBtn" style="flex: 2;">이미지 다운로드 (PNG)</button>
+                <button class="btn-secondary" id="resetRatioBtn" style="flex: 1;">비율 초기화</button>
+            </div>
+        </div>
+
+        <!-- 카드 3: 극단 입력 12건 테스트 -->
+        <div class="card">
+            <h2>3. 극단 입력 12건 테스트</h2>
+            <p class="desc">빈 값, 초과 텍스트, 깨진 이모지 등 12건의 극단 입력을 테스트합니다.</p>
+            <div class="extreme-test-area" id="testLogContainer">
+                <div class="test-log">테스트를 실행해주세요.</div>
+            </div>
+            <button class="btn-primary" id="runExtremeTestBtn">극단 입력 12건 테스트 실행</button>
+        </div>
+
+        <!-- 카드 4: 템플릿 CRUD 관리 -->
+        <div class="card">
+            <h2>4. 템플릿 CRUD 관리</h2>
+            <p class="desc">자주 쓰는 템플릿을 생성, 수정, 삭제하고 다시 불러올 수 있습니다.</p>
+            <div class="template-list" id="templateList"></div>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="newTemplateInput" placeholder="새 템플릿 이름 (3자 이상)">
+                <button class="btn-primary" id="addTemplateBtn" style="width: 80px;">생성</button>
+            </div>
+        </div>
+
+        <!-- 카드 5: JSON 분석 및 손상 처리 -->
+        <div class="card full-width">
+            <h2>5. JSON 분석 및 손상 처리</h2>
+            <p class="desc">아래 JSON 데이터를 수정하여 정상 데이터 혹은 손상된 데이터를 테스트해보세요.</p>
+            <textarea id="jsonInput" class="json-area">
 {
   "id": "img_001",
   "url": "https://example.com/image.jpg",
   "caption": "정상적인 캡션입니다."
 }
-        </textarea>
-        <button class="btn-primary" id="analyzeJsonBtn" style="width: 200px; margin-bottom: 15px;">JSON 분석 실행</button>
-        <div id="jsonResult" class="error-log">대기 중...</div>
+            </textarea>
+            <button class="btn-primary" id="analyzeJsonBtn" style="width: 200px; margin-bottom: 15px;">JSON 분석 실행</button>
+            <div id="jsonResult" class="error-log">대기 중...</div>
+        </div>
     </div>
-</div>
 
-<script>
-    // ==========================================
-    // 카드 1: 편집 및 미리보기 로직 (오류 방지 강화)
-    // ==========================================
-    const imageInput = document.getElementById('imageInput');
-    const previewImage = document.getElementById('previewImage');
-    const previewPlaceholder = document.getElementById('previewPlaceholder');
-    const captionInput = document.getElementById('captionInput');
-    const filterSelect = document.getElementById('filterSelect');
-    const applyBtn = document.getElementById('applyBtn');
-    const missingImageError = document.getElementById('missingImageError');
-    const previewContainer = document.getElementById('previewContainer');
-    
-    let currentImageFile = null;
-
-    imageInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return; // 파일 선택 취소 시 방어
-
-        if (!['image/jpeg', 'image/png'].includes(file.type)) {
-            alert('JPEG 또는 PNG 파일만 업로드할 수 있습니다.');
-            imageInput.value = '';
-            return;
-        }
-
-        currentImageFile = file;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            previewImage.src = e.target.result;
-            previewImage.style.display = 'block';
-            previewPlaceholder.style.display = 'none';
-            document.getElementById('uploadText').textContent = file.name;
-        };
-        reader.onerror = function() {
-            alert('파일을 읽는 중 오류가 발생했습니다.');
-        };
-        reader.readAsDataURL(file);
-    });
-
-    applyBtn.addEventListener('click', function() {
-        // 방어 코드: 이미지가 없으면 경고 후 중단
-        if (!currentImageFile) {
-            missingImageError.style.display = 'block';
-            setTimeout(() => missingImageError.style.display = 'none', 3000);
-            return;
-        }
-
-        const existingOverlay = document.querySelector('.preview-text-overlay');
-        if (existingOverlay) existingOverlay.remove();
-
-        if (captionInput.value.trim() !== '') {
-            const overlay = document.createElement('div');
-            overlay.className = 'preview-text-overlay';
-            overlay.textContent = captionInput.value;
-            previewContainer.appendChild(overlay);
-        }
-        previewImage.style.filter = filterSelect.value;
-    });
-
-    // ==========================================
-    // 카드 2: 화면과 파일의 일치
-    // ==========================================
-    const layoutItems = document.querySelectorAll('.layout-item');
-    
-    layoutItems.forEach(item => {
-        item.addEventListener('click', function() {
-            layoutItems.forEach(i => i.classList.remove('active'));
-            this.classList.add('active');
-
-            const ratio = this.getAttribute('data-ratio');
-            // 방어 코드: CSS 비율이 정상적으로 적용되도록 처리
-            if (ratio === '1:1') {
-                previewContainer.style.aspectRatio = '1/1';
-            } else if (ratio === '4:5') {
-                previewContainer.style.aspectRatio = '4/5';
-            } else if (ratio === '9:16') {
-                previewContainer.style.aspectRatio = '9/16';
-            }
-            previewContainer.style.height = 'auto';
-        });
-    });
-
-    document.getElementById('saveFileBtn').addEventListener('click', function() {
-        if (!currentImageFile) {
-            alert('이미지를 먼저 업로드해주세요.');
-            return;
-        }
-        const activeRatio = document.querySelector('.layout-item.active')?.getAttribute('data-ratio') || '1:1';
-        alert(`현재 화면 비율(${activeRatio})로 파일이 저장되었습니다. (시뮬레이션)`);
-    });
-
-    document.getElementById('resetRatioBtn').addEventListener('click', function() {
-        layoutItems.forEach(i => i.classList.remove('active'));
-        if(layoutItems[0]) layoutItems[0].classList.add('active');
-        previewContainer.style.aspectRatio = '1/1';
-    });
-
-    // ==========================================
-    // 카드 3: 극단 입력 12건 테스트
-    // ==========================================
-    document.getElementById('runExtremeTestBtn').addEventListener('click', function() {
-        const logContainer = document.getElementById('testLogContainer');
-        if(!logContainer) return;
-        logContainer.innerHTML = '';
-        
-        const extremeCases = [
-            { id: 'T03-C14', desc: '빈 문자열 테스트', status: 'PASS' },
-            { id: 'T03-C15', desc: '매우 긴 텍스트 (1000자)', status: 'FAIL' },
-            { id: 'T03-C16', desc: '깨진 이모지 삽입', status: 'FAIL' },
-            { id: 'T03-C17', desc: '특수문자 조합', status: 'PASS' },
-            { id: 'T03-C18', desc: '공백만 있는 문자열', status: 'PASS' },
-            { id: 'T03-C19', desc: '줄바꿈 문자 포함', status: 'PASS' },
-            { id: 'T03-C20', desc: 'HTML 태그 삽입', status: 'FAIL' },
-            { id: 'T03-C21', desc: '스크립트 태그 삽입', status: 'FAIL' },
-            { id: 'T03-C22', desc: '제로 너비 문자', status: 'PASS' },
-            { id: 'T03-C23', desc: '한글 자모 분리', status: 'FAIL' },
-            { id: 'T03-C24', desc: '영문+한글 혼용', status: 'PASS' },
-            { id: 'T03-C25', desc: 'JSON 형태의 문자열', status: 'PASS' }
-        ];
-
-        extremeCases.forEach(test => {
-            const div = document.createElement('div');
-            div.className = `test-log ${test.status === 'PASS' ? 'pass' : 'fail'}`;
-            div.textContent = `[${test.id}] ${test.desc} - ${test.status}`;
-            logContainer.appendChild(div);
-        });
-    });
-
-    // ==========================================
-    // 카드 4: 템플릿 CRUD 관리
-    // ==========================================
-    let templates = [
-        { id: 1, name: '기본 짤 템플릿' },
-        { id: 2, name: '인스타 감성 템플릿' },
-        { id: 3, name: '유머 짤 템플릿' }
-    ];
-    let nextTemplateId = 4;
-    const templateList = document.getElementById('templateList');
-
-    function renderTemplates() {
-        if(!templateList) return;
-        templateList.innerHTML = '';
-        templates.forEach(t => {
-            const item = document.createElement('div');
-            item.className = 'template-item';
-            item.innerHTML = `
-                <span>${t.name}</span>
-                <div class="template-actions">
-                    <button class="btn-secondary" onclick="editTemplate(${t.id})">수정</button>
-                    <button class="btn-danger" onclick="deleteTemplate(${t.id})">삭제</button>
-                    <button class="btn-secondary" onclick="loadTemplate(${t.id})">불러오기</button>
-                </div>
-            `;
-            templateList.appendChild(item);
-        });
-    }
-
-    document.getElementById('addTemplateBtn').addEventListener('click', function() {
-        const input = document.getElementById('newTemplateInput');
-        if(!input) return;
-        const name = input.value.trim();
-        
-        if (name.length < 3) { // 명세서 기준 3개 이상이므로 3자 이상으로 설정
-            alert('템플릿 이름은 3자 이상이어야 합니다.');
-            return;
-        }
-        
-        templates.push({ id: nextTemplateId++, name: name });
-        input.value = '';
-        renderTemplates();
-    });
-
-    // 전역 함수 등록 (onclick 이벤트와 연결)
-    window.editTemplate = function(id) {
-        const template = templates.find(t => t.id === id);
-        if (!template) return;
-        const newName = prompt('새로운 템플릿 이름을 입력하세요:', template.name);
-        if (newName !== null && newName.trim().length >= 3) {
-            template.name = newName.trim();
-            renderTemplates();
-        } else if (newName !== null) {
-            alert('이름은 3자 이상이어야 합니다.');
-        }
-    };
-
-    window.deleteTemplate = function(id) {
-        if (confirm('정말로 이 템플릿을 삭제하시겠습니까?')) {
-            templates = templates.filter(t => t.id !== id);
-            renderTemplates();
-        }
-    };
-
-    window.loadTemplate = function(id) {
-        const template = templates.find(t => t.id === id);
-        if (template) alert(`'${template.name}' 템플릿을 불러왔습니다. (시뮬레이션)`);
-    };
-
-    renderTemplates(); // 초기 렌더링
-
-    // ==========================================
-    // 카드 5: JSON 분석 및 손상 처리
-    // ==========================================
-    document.getElementById('analyzeJsonBtn').addEventListener('click', function() {
-        const input = document.getElementById('jsonInput').value;
-        const resultDiv = document.getElementById('jsonResult');
-        if(!resultDiv) return;
-        
-        resultDiv.innerHTML = '';
-        resultDiv.style.background = '#fff0f0';
-        resultDiv.style.borderColor = '#ffcccc';
-        resultDiv.style.color = '#cc0000';
-        
-        try {
-            const parsed = JSON.parse(input);
-            
-            let infoHtml = `<strong>✅ 정상 JSON 데이터입니다.</strong><br>`;
-            infoHtml += `- ID: ${parsed.id || '없음'}<br>`;
-            infoHtml += `- URL: ${parsed.url || '없음'}<br>`;
-            infoHtml += `- 캡션: ${parsed.caption || '없음'}<br>`;
-            
-            let errors = [];
-            if (!parsed.id) errors.push('id 필드 누락');
-            if (!parsed.url) errors.push('url 필드 누락');
-            if (parsed.caption && parsed.caption.includes('에러')) errors.push('캡션 내 금지어 포함');
-            
-            if (errors.length > 0) {
-                infoHtml += `<br><strong>⚠️ 데이터 무결성 오류 발견:</strong><ul>`;
-                errors.forEach(err => infoHtml += `<li>${err}</li>`);
-                infoHtml += `</ul>`;
-            } else {
-                infoHtml += `<br><strong>✅ 무결성 검사 통과</strong>`;
-                resultDiv.style.background = '#f0fff4';
-                resultDiv.style.borderColor = '#c6f6d5';
-                resultDiv.style.color = '#22543d';
-            }
-            resultDiv.innerHTML = infoHtml;
-            
-        } catch (e) {
-            resultDiv.innerHTML = `<strong>❌ JSON 문법 오류</strong><br>${e.message}`;
-        }
-    });
-</script>
+    <!-- JS 파일 연결 -->
+    <script src="script.js"></script>
 </body>
 </html>

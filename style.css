@@ -1,0 +1,87 @@
+/* 다크모드 및 라이트모드 변수 설정 */
+:root {
+    --primary-blue: #0055ff;
+    --bg-color: #f4f7f9;
+    --card-bg: #ffffff;
+    --text-main: #333333;
+    --text-sub: #888888;
+    --border-color: #e0e6ed;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    --input-bg: #ffffff;
+    --radius-lg: 20px;
+    --radius-md: 12px;
+}
+
+/* 다크모드 적용 시 변수값 오버라이드 */
+body.dark-mode {
+    --bg-color: #121212;
+    --card-bg: #1e1e1e;
+    --text-main: #f0f0f0;
+    --text-sub: #aaaaaa;
+    --border-color: #333333;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    --input-bg: #2a2a2a;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif; }
+body { background-color: var(--bg-color); color: var(--text-main); padding: 40px 20px; display: flex; justify-content: center; transition: background 0.3s, color 0.3s; min-height: 100vh; position: relative; }
+
+/* 다크모드 토글 버튼 */
+.theme-toggle { position: absolute; top: 20px; right: 20px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 50%; width: 50px; height: 50px; font-size: 20px; cursor: pointer; box-shadow: var(--shadow); transition: all 0.3s; z-index: 100; }
+.theme-toggle:hover { transform: scale(1.1); }
+
+.studio-container { width: 100%; max-width: 1000px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+.full-width { grid-column: 1 / -1; }
+@media (max-width: 768px) { .studio-container { grid-template-columns: 1fr; } .theme-toggle { top: 10px; right: 10px; width: 40px; height: 40px; font-size: 16px; } }
+
+.card { background: var(--card-bg); border-radius: var(--radius-lg); padding: 25px; box-shadow: var(--shadow); transition: background 0.3s; }
+h2 { font-size: 18px; margin-bottom: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+h2::before { content: ''; display: inline-block; width: 4px; height: 18px; background: var(--primary-blue); border-radius: 2px; }
+.desc { font-size: 13px; color: var(--text-sub); margin-bottom: 20px; line-height: 1.5; }
+
+button { cursor: pointer; border: none; border-radius: var(--radius-md); font-weight: 600; transition: all 0.2s; }
+.btn-primary { background: var(--primary-blue); color: white; padding: 12px 20px; width: 100%; }
+.btn-primary:hover { background: #0044cc; }
+.btn-secondary { background: #eef2f6; color: var(--text-main); padding: 8px 12px; font-size: 13px; }
+body.dark-mode .btn-secondary { background: #333; color: #fff; }
+.btn-secondary:hover { opacity: 0.8; }
+.btn-danger { background: #ffeded; color: #ff3333; padding: 8px 12px; font-size: 13px; }
+
+input[type="text"], textarea, select { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-md); font-size: 14px; outline: none; transition: border 0.2s; background: var(--input-bg); color: var(--text-main); }
+input[type="text"]:focus, textarea:focus { border-color: var(--primary-blue); }
+
+/* 텍스트 스타일링 컨트롤러 */
+.text-controls { display: flex; flex-direction: column; gap: 10px; }
+.style-row { display: flex; gap: 10px; align-items: center; }
+.style-row input[type="color"] { width: 40px; height: 40px; padding: 0; border: none; border-radius: 8px; cursor: pointer; background: none; }
+.style-row input[type="range"] { flex: 1; cursor: pointer; }
+.style-row select { flex: 1; padding: 8px; font-size: 12px; }
+
+.file-input-wrapper { position: relative; overflow: hidden; display: inline-block; width: 100%; }
+.file-input-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
+.upload-box { border: 2px dashed var(--border-color); border-radius: var(--radius-md); padding: 20px; text-align: center; color: var(--text-sub); font-size: 13px; transition: all 0.3s; }
+.file-input-wrapper.dragover .upload-box { border-color: var(--primary-blue); background: rgba(0, 85, 255, 0.05); }
+
+.preview-area { width: 100%; height: 250px; background: var(--input-bg); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 15px; border: 1px solid var(--border-color); position: relative; transition: aspect-ratio 0.3s; }
+.preview-area img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.preview-text-overlay { position: absolute; color: white; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); font-weight: bold; pointer-events: none; text-align: center; padding: 0 10px; word-break: break-all; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+
+.layout-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+.layout-item { border: 2px solid var(--border-color); border-radius: var(--radius-md); padding: 10px; text-align: center; cursor: pointer; font-size: 12px; color: var(--text-sub); transition: all 0.2s; }
+.layout-item.active { border-color: var(--primary-blue); color: var(--primary-blue); background: rgba(0, 85, 255, 0.05); }
+
+.extreme-test-area { background: var(--input-bg); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 15px; margin-bottom: 15px; max-height: 200px; overflow-y: auto; }
+.test-log { font-size: 12px; color: var(--text-sub); margin-bottom: 5px; font-family: monospace; }
+.test-log.fail { color: #ff3333; }
+.test-log.pass { color: #00aa55; }
+
+.template-list { margin-bottom: 15px; }
+.template-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid var(--border-color); font-size: 14px; }
+.template-item:last-child { border-bottom: none; }
+.template-actions { display: flex; gap: 5px; }
+
+.json-area { width: 100%; height: 150px; font-family: monospace; font-size: 12px; margin-bottom: 15px; background: #1e1e1e; color: #d4d4d4; padding: 10px; border-radius: var(--radius-md); border: none; resize: none; }
+.error-log { background: rgba(255, 51, 51, 0.1); border: 1px solid rgba(255, 51, 51, 0.3); padding: 15px; border-radius: var(--radius-md); font-size: 13px; color: #cc0000; min-height: 80px; }
+body.dark-mode .error-log { color: #ff8888; }
+.error-log ul { padding-left: 20px; margin-top: 5px; }
+.error-msg { color: #ff3333; font-size: 12px; margin-top: 10px; }
