@@ -57,7 +57,7 @@ function handleImageUpload(event) {
         document.getElementById('zoom-val').textContent = '100%';
         phEl.style.display = 'none';
         
-        // [수정] 이미지가 새로 들어오면 기존 텍스트는 지우고 숨김
+        // [핵심] 이미지 업로드 시 텍스트 컨테이너 무조건 숨김 및 초기화
         document.getElementById('preview-text-container').classList.remove('show');
         document.getElementById('preview-text').textContent = "";
         document.getElementById('text-input').value = "";
@@ -80,15 +80,15 @@ function addText() {
     }
 
     textMsg.textContent = "";
-    textContainer.classList.add('show');
-    textInput.disabled = false;
+    textContainer.classList.add('show'); // 텍스트 상자 보이기
+    textInput.disabled = false;          // 입력창 활성화
     textInput.focus();
     
-    // 텍스트가 없으면 비어있는 상태로 두지 않고 기본값 적용 (원하시면 빈칸으로 두셔도 됩니다)
+    // 텍스트가 없으면 빈칸으로 두지 않고 기본 텍스트 삽입 (원하시면 빈칸으로 두셔도 됩니다)
     if (textInput.value.trim() === "") {
         textInput.value = "새로운 텍스트";
         document.getElementById('preview-text').textContent = textInput.value;
-        updateTextStyle(); // 스타일 즉시 적용
+        updateTextStyle(); 
     }
 }
 
@@ -99,9 +99,11 @@ function updateImageZoom() {
     imgEl.style.transform = `scale(${zoomVal / 100})`;
 }
 
+// 텍스트 입력 시 즉시 반영
 function updateText(event) {
     const textEl = document.getElementById('preview-text');
-    textEl.textContent = event.target.value;
+    // 빈 칸을 입력해도 '텍스트를 입력하세요' 같은 강제 문구가 나오지 않도록 수정
+    textEl.textContent = event.target.value; 
 }
 
 function updateTextStyle() {
@@ -126,7 +128,7 @@ function updateTextStyle() {
     textContainer.style.top = `${currentYPercent}%`;
 }
 
-// 마우스 드래그 앤 드롭 로직
+// 마우스 드래그 앤 드롭
 function setupDragAndDrop() {
     const textContainer = document.getElementById('preview-text-container');
     const canvasArea = document.getElementById('canvas-area');
@@ -284,7 +286,7 @@ function loadValidJson() {
     imgEl.classList.add('loaded');
     document.getElementById('placeholder-text').style.display = 'none';
     
-    // JSON 복원 시에만 텍스트 상자 표시
+    // JSON 복원 시 텍스트 상자 강제 표시 및 내용 적용
     const textContainer = document.getElementById('preview-text-container');
     const textEl = document.getElementById('preview-text');
     textContainer.classList.add('show');

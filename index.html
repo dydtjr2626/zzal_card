@@ -20,12 +20,11 @@
             </header>
 
             <div class="canvas-wrapper">
-                <!-- 캔버스 (미리보기) - 마우스 드래그 이벤트 추가 -->
                 <div class="canvas-container" id="canvas-area">
                     <img id="preview-img" class="canvas-image" src="" alt="Preview" style="display:none;">
-                    <!-- 텍스트 상자 (초기엔 숨김) -->
+                    <!-- 텍스트 컨테이너: 버튼을 누르기 전까지 무조건 숨김 -->
                     <div id="preview-text-container" class="text-container">
-                        <span id="preview-text" class="canvas-text">텍스트를 입력하세요</span>
+                        <span id="preview-text" class="canvas-text"></span>
                     </div>
                     <span id="placeholder-text" class="placeholder">이미지 없음</span>
                 </div>
@@ -38,7 +37,6 @@
                     <div class="validation-msg" id="file-msg"></div>
                 </div>
 
-                <!-- [추가] 텍스트 추가 버튼 및 입력창 -->
                 <div class="control-group">
                     <label>텍스트 편집</label>
                     <div style="display: flex; gap: 8px;">
