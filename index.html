@@ -3,148 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Card Studio - 기획안 구현</title>
+    <title>통합 Card Studio</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="app-container">
-        <!-- 좌측: 카드 보드 영역 -->
-        <main class="board-area">
-            <header class="board-header">
-                <h2>Card Studio Board</h2>
-                <button class="btn-secondary" onclick="location.reload()">전체 초기화</button>
-            </header>
-
-            <div class="card-list" id="card-list">
-                <!-- 카드 1 -->
-                <div class="card active" id="card-1" onclick="selectCard('card-1')">
-                    <span class="card-badge">Card 1</span>
-                    <h3>편집과 미리보기</h3>
-                    <p>이미지를 불러와 문구 위치/크기/색을 바꾸고 즉시 미리 봅니다.</p>
-                </div>
-
-                <!-- 카드 2 -->
-                <div class="card" id="card-2" onclick="selectCard('card-2')">
-                    <span class="card-badge">Card 2</span>
-                    <h3>화면과 파일의 일치</h3>
-                    <p>세 화면에서 미리보기와 내려받은 파일을 대조합니다. (1:1, 4:5, 9:16)</p>
-                </div>
-
-                <!-- 카드 3 -->
-                <div class="card" id="card-3" onclick="selectCard('card-3')">
-                    <span class="card-badge">Card 3</span>
-                    <h3>다중 입력 12건</h3>
-                    <p>긴 글/혼합 문자/이모지/다양한 이미지 편집 내용을 보존합니다.</p>
-                </div>
-
-                <!-- 카드 4 -->
-                <div class="card" id="card-4" onclick="selectCard('card-4')">
-                    <span class="card-badge">Card 4</span>
-                    <h3>실체 템플릿 관리</h3>
-                    <p>사용자가 템플릿을 만들고 불러오고 고치고 지웁니다.</p>
-                </div>
-
-                <!-- 카드 5 -->
-                <div class="card" id="card-5" onclick="selectCard('card-5')">
-                    <span class="card-badge">Card 5</span>
-                    <h3>올게 쓰기와 완성본</h3>
-                    <p>정상/결함 JSON을 시험하고 완성 이미지 3개와 사용 권한을 확인합니다.</p>
-                </div>
-            </div>
-        </main>
-
-        <!-- 우측: 컨트롤 및 미리보기 영역 (넓어짐) -->
-        <aside class="sidebar">
-            <div class="panel">
-                <h2 id="panel-title">미리보기 및 제어판</h2>
-                
-                <!-- [추가] Card 2 비율 테스트용 컨트롤러 -->
-                <div class="aspect-ratio-controls">
+        <!-- 좌측: 메인 에디터 영역 (카드 1, 2) -->
+        <main class="editor-area">
+            <header class="header">
+                <h2>Card Studio Editor</h2>
+                <div class="ratio-controls">
                     <span>화면 비율:</span>
                     <button class="ratio-btn active" onclick="changeRatio('1/1', this)">1:1</button>
                     <button class="ratio-btn" onclick="changeRatio('4/5', this)">4:5</button>
                     <button class="ratio-btn" onclick="changeRatio('9/16', this)">9:16</button>
                 </div>
+            </header>
 
-                <!-- 공통 캔버스 (미리보기) - 크기 대폭 확장 -->
+            <div class="canvas-wrapper">
+                <!-- 캔버스 (미리보기) -->
                 <div class="canvas-container" id="canvas-area">
                     <img id="preview-img" class="canvas-image" src="" alt="Preview" style="display:none;">
                     <span id="preview-text" class="canvas-text">텍스트를 입력하세요</span>
-                    <span id="placeholder-text" style="color:#999;">이미지 없음 (파일을 업로드하세요)</span>
+                    <span id="placeholder-text" class="placeholder">이미지 없음</span>
+                </div>
+            </div>
+
+            <!-- 편집 컨트롤러 -->
+            <div class="editor-controls">
+                <div class="control-group">
+                    <label>이미지 업로드 (PNG/JPEG 전용)</label>
+                    <input type="file" id="image-upload" accept="image/png, image/jpeg" onchange="handleImageUpload(event)">
+                    <div class="validation-msg" id="file-msg"></div>
                 </div>
 
-                <!-- Card 1 제어판 -->
-                <div class="controls active" id="card1-controls">
-                    <div class="control-group">
-                        <label>이미지 업로드 (PNG/JPEG 전용)</label>
-                        <input type="file" id="image-upload" accept="image/png, image/jpeg" onchange="handleImageUpload(event)">
-                        <div class="validation-msg" id="file-msg"></div>
-                    </div>
+                <div class="control-group">
+                    <label>문구 입력</label>
+                    <input type="text" id="text-input" placeholder="문구를 입력하세요" oninput="updateText(event)">
+                </div>
 
+                <div class="sliders">
                     <div class="control-group">
-                        <label>문구 입력</label>
-                        <input type="text" id="text-input" placeholder="문구를 입력하세요" oninput="updateText(event)">
-                    </div>
-
-                    <!-- 직관적인 Bar 형태 컨트롤러 -->
-                    <div class="control-group">
-                        <label>문구 크기 (Size) <span id="size-val">24px</span></label>
+                        <label>크기 <span id="size-val">24px</span></label>
                         <input type="range" id="size-slider" min="10" max="80" value="24" oninput="updateTextStyle()">
                     </div>
-
                     <div class="control-group">
-                        <label>가로 위치 (X) <span id="pos-x-val">50%</span></label>
+                        <label>가로 위치 <span id="pos-x-val">50%</span></label>
                         <input type="range" id="pos-x-slider" min="0" max="100" value="50" oninput="updateTextStyle()">
                     </div>
-
                     <div class="control-group">
-                        <label>세로 위치 (Y) <span id="pos-y-val">50%</span></label>
+                        <label>세로 위치 <span id="pos-y-val">50%</span></label>
                         <input type="range" id="pos-y-slider" min="0" max="100" value="50" oninput="updateTextStyle()">
                     </div>
-
                     <div class="control-group">
-                        <label>문구 색상</label>
+                        <label>색상</label>
                         <input type="color" id="color-input" value="#ffffff" oninput="updateTextStyle()">
                     </div>
-
-                    <button class="btn-primary" onclick="downloadPreview()">결과 다운로드 (Mock)</button>
                 </div>
-
-                <!-- Card 3 제어판 -->
-                <div class="controls" id="card3-controls">
-                    <p class="desc">12건의 대표 검사 항목입니다. 빈 칸이 없어야 통과됩니다.</p>
-                    <div class="multi-input-grid" id="multi-input-container">
-                        <!-- JS로 12개 입력창 생성 -->
-                    </div>
-                    <button class="btn-primary" onclick="saveCard3()">12건 검사 및 저장</button>
-                    <div class="validation-msg" id="card3-msg"></div>
-                </div>
-
-                <!-- Card 4 제어판 -->
-                <div class="controls" id="card4-controls">
-                    <div class="control-group" style="display:flex; gap:8px;">
-                        <input type="text" id="new-template-name" placeholder="새 템플릿 이름">
-                        <button class="btn-primary" style="white-space:nowrap;" onclick="createTemplate()">생성</button>
-                    </div>
-                    <ul class="template-list" id="template-list">
-                        <!-- JS로 렌더링 -->
-                    </ul>
-                </div>
-
-                <!-- Card 5 제어판 -->
-                <div class="controls" id="card5-controls">
-                    <p class="desc">정상 JSON 복원과 손상된 JSON 거부를 테스트합니다.</p>
-                    <div style="display:flex; gap:8px;">
-                        <button class="btn-primary" onclick="loadValidJson()">정상 JSON 불러오기</button>
-                        <button class="btn-danger" onclick="loadInvalidJson()">결함 JSON 불러오기</button>
-                    </div>
-                    <div class="validation-msg" id="card5-msg"></div>
-                </div>
-
+                
+                <button class="btn-primary" onclick="downloadPreview()">결과 다운로드 (Mock)</button>
             </div>
+        </main>
+
+        <!-- 우측: 데이터 및 관리 영역 (카드 3, 4, 5) -->
+        <aside class="sidebar">
+            <!-- Card 3: 다중 입력 12건 -->
+            <section class="panel">
+                <h3>다중 입력 검사 (12건)</h3>
+                <p class="desc">예상값이 있는 굵단 입력 12개를 검사합니다. (빈 칸 불가)</p>
+                <div class="multi-input-grid" id="multi-input-container">
+                    <!-- JS로 생성 -->
+                </div>
+                <button class="btn-primary mt-10" onclick="saveCard3()">12건 검사 및 대표 결과 전송</button>
+                <div class="validation-msg" id="card3-msg"></div>
+            </section>
+
+            <!-- Card 4: 템플릿 관리 -->
+            <section class="panel">
+                <h3>템플릿 관리 (CRUD)</h3>
+                <div class="template-create">
+                    <input type="text" id="new-template-name" placeholder="새 템플릿 이름">
+                    <button class="btn-secondary" onclick="createTemplate()">생성</button>
+                </div>
+                <ul class="template-list" id="template-list">
+                    <!-- JS로 렌더링 -->
+                </ul>
+            </section>
+
+            <!-- Card 5: JSON 처리 -->
+            <section class="panel">
+                <h3>JSON 시험 및 완성본</h3>
+                <p class="desc">정상 JSON 복원 및 결함 JSON 거부를 테스트합니다.</p>
+                <div class="json-controls">
+                    <button class="btn-primary" onclick="loadValidJson()">정상 JSON 불러오기</button>
+                    <button class="btn-danger" onclick="loadInvalidJson()">결함 JSON 불러오기</button>
+                </div>
+                <div class="validation-msg" id="card5-msg"></div>
+            </section>
         </aside>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
