@@ -33,7 +33,6 @@
             <div class="editor-controls">
                 <div class="control-group">
                     <label>이미지 업로드 (PNG/JPEG 전용)</label>
-                    <!-- 인라인 이벤트(onchange)로 확실하게 연결 -->
                     <input type="file" id="image-upload" accept="image/png, image/jpeg" onchange="handleImageUpload(event)">
                     <div class="validation-msg" id="file-msg"></div>
                 </div>
@@ -41,6 +40,7 @@
                 <div class="control-group">
                     <label>텍스트 편집</label>
                     <div style="display: flex; gap: 8px;">
+                        <!-- 버튼 클릭 시 addText() 호출 -->
                         <button id="btn-add-text" class="btn-secondary" style="flex: 1; white-space: nowrap;" onclick="addText()">+ 텍스트 추가</button>
                     </div>
                     <div class="validation-msg" id="text-msg"></div>

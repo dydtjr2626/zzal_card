@@ -28,7 +28,7 @@ function changeRatio(ratio, btn) {
     else if (ratio === '9/16') canvas.style.width = '253px';
 }
 
-// 이미지 업로드 처리 (HTML 인라인 onchange로 호출됨)
+// 이미지 업로드 처리
 function handleImageUpload(event) {
     const file = event.target.files[0];
     const msgEl = document.getElementById('file-msg');
@@ -72,12 +72,13 @@ function updateImageZoom() {
     imgEl.style.transform = `scale(${zoomVal / 100})`;
 }
 
-// 여러 개의 텍스트 추가 (HTML 인라인 onclick으로 호출됨)
+// 텍스트 추가 (조건문을 확실하게 수정)
 function addText() {
-    const imgEl = document.getElementById('preview-img');
     const textMsg = document.getElementById('text-msg');
+    const imgEl = document.getElementById('preview-img');
 
-    if (imgEl.style.display === 'none') {
+    // 이미지가 없으면 텍스트를 추가하지 않고 경고 (선택 사항)
+    if (!imgEl.src || imgEl.style.display === 'none') {
         textMsg.textContent = "⚠️ 먼저 이미지를 업로드해주세요.";
         textMsg.className = "validation-msg error";
         return;
@@ -88,38 +89,35 @@ function addText() {
 
     const newText = document.createElement('div');
     newText.className = 'draggable-text';
-    newText.contentEditable = "true"; // 브라우저 내에서 바로 수정 가능
+    newText.contentEditable = "true"; 
     newText.innerText = "텍스트 입력";
     
+    // 화면 중앙에 배치
     newText.style.left = '50%';
     newText.style.top = '50%';
     
+    // 현재 슬라이더 값 적용
     const currentSize = document.getElementById('size-slider').value;
     const currentColor = document.getElementById('color-input').value;
     newText.style.fontSize = `${currentSize}px`;
     newText.style.color = currentColor;
 
-    // 클릭 시 선택
+    // 마우스 다운 이벤트 (드래그 시작 및 선택)
     newText.addEventListener('mousedown', (e) => {
-        // 드래그를 위해 기본 텍스트 선택 방지
-        e.preventDefault(); 
+        e.preventDefault(); // 텍스트 드래그 방지
         selectText(newText);
         
-        // 드래그 시작 좌표 저장
         isDragging = true;
         dragStartX = e.clientX;
         dragStartY = e.clientY;
         
-        // 현재 요소의 % 위치 저장
         initialLeft = parseFloat(newText.style.left) || 50;
         initialTop = parseFloat(newText.style.top) || 50;
     });
 
     textLayer.appendChild(newText);
     selectText(newText);
-    
-    // 새로 추가된 텍스트에 포커스 (바로 타이핑 가능하게)
-    newText.focus();
+    newText.focus(); // 바로 타이핑 가능하게
 }
 
 // 특정 텍스트 선택
@@ -170,11 +168,6 @@ function setupDragAndDrop() {
         const newLeft = initialLeft + (deltaX / canvasRect.width) * 100;
         const newTop = initialTop + (deltaY / canvasRect.height) * 100;
 
-        // 캔버스 영역을 벗어나지 않도록 제한 (선택사항)
-        // activeTextElement.style.left = `${newLeft}%`;
-        // activeTextElement.style.top = `${newTop}%`;
-        
-        // 부드러운 이동을 위해 %로 적용
         activeTextElement.style.left = `${newLeft}%`;
         activeTextElement.style.top = `${newTop}%`;
     });
