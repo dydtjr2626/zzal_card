@@ -4,84 +4,16 @@ let templates = [
     { id: 3, name: "이벤트 홍보" }
 ];
 
-let isDragging = false;
 let activeTextElement = null; // 현재 선택된 텍스트
-let dragStartX = 0, dragStartY = 0;
-let initialLeft = 0, initialTop = 0;
+let isDragging = false;
+let dragStartX, dragStartY;
+let initialLeft, initialTop;
 
 document.addEventListener('DOMContentLoaded', () => {
     initCard3Inputs();
     renderTemplates();
-    setupEventListeners();
+    setupDragAndDrop();
 });
-
-// ==========================================
-// 이벤트 리스너 설정
-// ==========================================
-function setupEventListeners() {
-    document.getElementById('image-upload').addEventListener('change', handleImageUpload);
-    document.getElementById('btn-add-text').addEventListener('click', addText);
-
-    // 마우스 드래그 이벤트 (캔버스 전체 영역에 등록)
-    const canvasArea = document.getElementById('canvas-area');
-    
-    canvasArea.addEventListener('mousedown', (e) => {
-        // 드래그 가능한 텍스트를 클릭했을 때만 작동
-        if (e.target.classList.contains('draggable-text')) {
-            activeTextElement = e.target;
-            selectText(activeTextElement);
-            
-            isDragging = true;
-            const rect = activeTextElement.getBoundingClientRect();
-            const canvasRect = canvasArea.getBoundingClientRect();
-            
-            // 마우스 클릭 지점과 요소의 좌상단 간의 거리 계산
-            dragStartX = e.clientX - rect.left;
-            dragStartY = e.clientY - rect.top;
-            
-            // 현재 요소의 % 위치 저장
-            initialLeft = parseFloat(activeTextElement.style.left) || 50;
-            initialTop = parseFloat(activeTextElement.style.top) || 50;
-
-            e.preventDefault(); // 텍스트 선택(파란색 블록) 방지
-        } else {
-            // 빈 공간 클릭 시 선택 해제
-            deselectAll();
-        }
-    });
-
-    document.addEventListener('mousemove', (e) => {
-        if (!isDragging || !activeTextElement) return;
-
-        const canvasRect = canvasArea.getBoundingClientRect();
-        
-        // 마우스 위치에서 클릭 오프셋을 빼서 실제 텍스트의 좌상단 위치 계산
-        let newX = e.clientX - canvasRect.left - dragStartX;
-        let newY = e.clientY - canvasRect.top - dragStartY;
-
-        // 퍼센트로 변환
-        let newLeftPercent = (newX / canvasRect.width) * 100;
-        let newTopPercent = (newY / canvasRect.height) * 100;
-
-        // 캔버스 영역 밖으로 나가지 않도록 제한 (옵션: 0~100%)
-        // transform: translate(-50%, -50%) 이므로 텍스트의 중심이 캔버스 밖으로 나가지 않게 함
-        if (newLeftPercent < 0) newLeftPercent = 0;
-        if (newLeftPercent > 100) newLeftPercent = 100;
-        if (newTopPercent < 0) newTopPercent = 0;
-        if (newTopPercent > 100) newTopPercent = 100;
-
-        activeTextElement.style.left = `${newLeftPercent}%`;
-        activeTextElement.style.top = `${newTopPercent}%`;
-    });
-
-    document.addEventListener('mouseup', () => {
-        isDragging = false;
-    });
-
-    // 텍스트 내용 수정 시 스타일 동기화 (선택된 텍스트의 크기/색상 슬라이더 업데이트)
-    document.getElementById('size-slider').addEventListener('input', updateSelectedTextStyle);
-    document.getElementById('color-input').addEventListener('input', updateSelectedTextStyle);
-}
 
 // ==========================================
 // [Card 1, 2] 이미지 및 텍스트 제어
@@ -96,6 +28,7 @@ function changeRatio(ratio, btn) {
     else if (ratio === '9/16') canvas.style.width = '253px';
 }
 
+// 이미지 업로드 처리 (HTML 인라인 onchange로 호출됨)
 function handleImageUpload(event) {
     const file = event.target.files[0];
     const msgEl = document.getElementById('file-msg');
@@ -119,7 +52,10 @@ function handleImageUpload(event) {
     reader.onload = function(e) {
         imgEl.src = e.target.result;
         imgEl.style.display = 'block';
-        imgEl.classList.add('loaded');
+        // 브라우저 렌더링 타이밍을 맞추기 위해 약간의 지연 후 클래스 추가
+        setTimeout(() => {
+            imgEl.classList.add('loaded');
+        }, 10);
         
         zoomSlider.value = 100;
         imgEl.style.transform = 'scale(1)';
@@ -136,7 +72,7 @@ function updateImageZoom() {
     imgEl.style.transform = `scale(${zoomVal / 100})`;
 }
 
-// 여러 개의 텍스트 추가
+// 여러 개의 텍스트 추가 (HTML 인라인 onclick으로 호출됨)
 function addText() {
     const imgEl = document.getElementById('preview-img');
     const textMsg = document.getElementById('text-msg');
@@ -150,38 +86,40 @@ function addText() {
     textMsg.textContent = "";
     const textLayer = document.getElementById('text-layer');
 
-    // 새로운 텍스트 요소 생성
     const newText = document.createElement('div');
     newText.className = 'draggable-text';
     newText.contentEditable = "true"; // 브라우저 내에서 바로 수정 가능
     newText.innerText = "텍스트 입력";
     
-    // 초기 위치 (중앙)
     newText.style.left = '50%';
     newText.style.top = '50%';
     
-    // 현재 슬라이더 값 적용
     const currentSize = document.getElementById('size-slider').value;
     const currentColor = document.getElementById('color-input').value;
     newText.style.fontSize = `${currentSize}px`;
     newText.style.color = currentColor;
 
-    // 텍스트를 클릭하면 선택 상태로 만들기
-    newText.addEventListener('click', (e) => {
-        e.stopPropagation(); // 이벤트 버블링 방지
+    // 클릭 시 선택
+    newText.addEventListener('mousedown', (e) => {
+        // 드래그를 위해 기본 텍스트 선택 방지
+        e.preventDefault(); 
         selectText(newText);
-    });
-
-    // 텍스트 수정 완료 시 (엔터키 등) 포커스 해제
-    newText.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            newText.blur();
-        }
+        
+        // 드래그 시작 좌표 저장
+        isDragging = true;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        
+        // 현재 요소의 % 위치 저장
+        initialLeft = parseFloat(newText.style.left) || 50;
+        initialTop = parseFloat(newText.style.top) || 50;
     });
 
     textLayer.appendChild(newText);
-    selectText(newText); // 추가하자마자 선택 상태로
+    selectText(newText);
+    
+    // 새로 추가된 텍스트에 포커스 (바로 타이핑 가능하게)
+    newText.focus();
 }
 
 // 특정 텍스트 선택
@@ -192,35 +130,69 @@ function selectText(element) {
     
     // 현재 선택된 텍스트의 스타일을 슬라이더에 동기화
     const currentSize = parseInt(element.style.fontSize) || 24;
-    const currentColor = element.style.color;
-    
     document.getElementById('size-slider').value = currentSize;
     document.getElementById('size-val').textContent = `${currentSize}px`;
     
-    // 색상 값을 hex로 변환하여 input[type="color"]에 적용
-    if (currentColor) {
-        // rgb -> hex 변환 로직 (간단한 예시, 실제로는 더 복잡할 수 있음)
-        const dummy = document.createElement('div');
-        dummy.style.color = currentColor;
-        document.body.appendChild(dummy);
-        const computedColor = window.getComputedStyle(dummy).color;
-        document.body.removeChild(dummy);
+    // 색상 동기화
+    const dummy = document.createElement('div');
+    dummy.style.color = element.style.color;
+    document.body.appendChild(dummy);
+    const computedColor = window.getComputedStyle(dummy).color;
+    document.body.removeChild(dummy);
 
-        const rgb = computedColor.match(/\d+/g);
-        if (rgb) {
-            const hex = "#" + ((1 << 24) + (parseInt(rgb[0]) << 16) + (parseInt(rgb[1]) << 8) + parseInt(rgb[2])).toString(16).slice(1);
-            document.getElementById('color-input').value = hex;
-        }
+    const rgb = computedColor.match(/\d+/g);
+    if (rgb) {
+        const hex = "#" + ((1 << 24) + (parseInt(rgb[0]) << 16) + (parseInt(rgb[1]) << 8) + parseInt(rgb[2])).toString(16).slice(1);
+        document.getElementById('color-input').value = hex;
     }
 }
 
-// 모든 텍스트 선택 해제
 function deselectAll() {
     document.querySelectorAll('.draggable-text').forEach(el => el.classList.remove('selected'));
     activeTextElement = null;
 }
 
-// 선택된 텍스트의 스타일 업데이트 (크기, 색상)
+// 마우스 드래그 이벤트 설정
+function setupDragAndDrop() {
+    const canvasArea = document.getElementById('canvas-area');
+
+    // 드래그 중 (마우스 이동)
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging || !activeTextElement) return;
+
+        const canvasRect = canvasArea.getBoundingClientRect();
+        
+        // 마우스 이동 거리 계산
+        const deltaX = e.clientX - dragStartX;
+        const deltaY = e.clientY - dragStartY;
+
+        // 퍼센트로 변환하여 위치 업데이트
+        const newLeft = initialLeft + (deltaX / canvasRect.width) * 100;
+        const newTop = initialTop + (deltaY / canvasRect.height) * 100;
+
+        // 캔버스 영역을 벗어나지 않도록 제한 (선택사항)
+        // activeTextElement.style.left = `${newLeft}%`;
+        // activeTextElement.style.top = `${newTop}%`;
+        
+        // 부드러운 이동을 위해 %로 적용
+        activeTextElement.style.left = `${newLeft}%`;
+        activeTextElement.style.top = `${newTop}%`;
+    });
+
+    // 드래그 종료
+    document.addEventListener('mouseup', () => {
+        isDragging = false;
+    });
+
+    // 캔버스 빈 곳 클릭 시 선택 해제
+    canvasArea.addEventListener('mousedown', (e) => {
+        if (e.target === canvasArea || e.target === document.getElementById('preview-img')) {
+            deselectAll();
+        }
+    });
+}
+
+// 선택된 텍스트 스타일 업데이트
 function updateSelectedTextStyle() {
     if (!activeTextElement) return;
 
@@ -332,22 +304,20 @@ function loadValidJson() {
         image: "https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=800&auto=format&fit=crop"
     };
     
-    // 이미지 및 줌 초기화
     const imgEl = document.getElementById('preview-img');
     imgEl.src = validData.image;
     imgEl.style.display = 'block';
-    imgEl.classList.add('loaded');
+    setTimeout(() => { imgEl.classList.add('loaded'); }, 10);
+    
     document.getElementById('placeholder-text').style.display = 'none';
     
     document.getElementById('zoom-slider').value = validData.zoom;
     updateImageZoom(); 
 
-    // 기존 텍스트 모두 지우기
     const textLayer = document.getElementById('text-layer');
     textLayer.innerHTML = '';
     deselectAll();
 
-    // JSON 데이터로 텍스트 복원
     validData.texts.forEach(t => {
         const newText = document.createElement('div');
         newText.className = 'draggable-text';
@@ -358,9 +328,14 @@ function loadValidJson() {
         newText.style.fontSize = `${t.size}px`;
         newText.style.color = t.color;
 
-        newText.addEventListener('click', (e) => {
-            e.stopPropagation();
+        newText.addEventListener('mousedown', (e) => {
+            e.preventDefault(); 
             selectText(newText);
+            isDragging = true;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            initialLeft = parseFloat(newText.style.left) || 50;
+            initialTop = parseFloat(newText.style.top) || 50;
         });
         
         textLayer.appendChild(newText);

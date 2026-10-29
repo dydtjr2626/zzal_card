@@ -95,7 +95,7 @@ body {
 }
 .canvas-image.loaded { opacity: 1; }
 
-/* [수정] 여러 텍스트를 담는 레이어 */
+/* 여러 텍스트를 담는 레이어 */
 .text-layer {
     position: absolute;
     top: 0;
@@ -106,7 +106,7 @@ body {
     pointer-events: none; /* 레이어 자체는 클릭 통과 */
 }
 
-/* [수정] 개별 텍스트 아이템 */
+/* 개별 텍스트 아이템 */
 .draggable-text {
     position: absolute;
     font-weight: bold;
@@ -118,13 +118,15 @@ body {
     padding: 4px 8px;
     border: 1px dashed transparent; /* 선택 표시용 */
     transform: translate(-50%, -50%);
-    /* 입력을 위해 contenteditable 사용 */
     outline: none;
+    min-width: 20px;
+    min-height: 20px;
 }
 .draggable-text:active { cursor: grabbing; }
 .draggable-text.selected {
     border-color: var(--primary);
     background: rgba(74, 144, 226, 0.1);
+    cursor: move;
 }
 
 .placeholder { color: #999; font-weight: bold; z-index: 0; }

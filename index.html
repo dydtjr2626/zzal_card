@@ -23,7 +23,7 @@
                 <div class="canvas-container" id="canvas-area">
                     <img id="preview-img" class="canvas-image" src="" alt="Preview" style="display:none;">
                     
-                    <!-- [수정] 여러 개의 텍스트가 추가될 컨테이너 영역 -->
+                    <!-- 여러 개의 텍스트가 추가될 컨테이너 영역 -->
                     <div id="text-layer" class="text-layer"></div>
                     
                     <span id="placeholder-text" class="placeholder">이미지 없음</span>
@@ -33,19 +33,19 @@
             <div class="editor-controls">
                 <div class="control-group">
                     <label>이미지 업로드 (PNG/JPEG 전용)</label>
-                    <input type="file" id="image-upload" accept="image/png, image/jpeg">
+                    <!-- 인라인 이벤트(onchange)로 확실하게 연결 -->
+                    <input type="file" id="image-upload" accept="image/png, image/jpeg" onchange="handleImageUpload(event)">
                     <div class="validation-msg" id="file-msg"></div>
                 </div>
 
                 <div class="control-group">
                     <label>텍스트 편집</label>
                     <div style="display: flex; gap: 8px;">
-                        <button id="btn-add-text" class="btn-secondary" style="flex: 1; white-space: nowrap;">+ 텍스트 추가</button>
+                        <button id="btn-add-text" class="btn-secondary" style="flex: 1; white-space: nowrap;" onclick="addText()">+ 텍스트 추가</button>
                     </div>
                     <div class="validation-msg" id="text-msg"></div>
                 </div>
 
-                <!-- [수정] 위치 조절 슬라이더 삭제, 크기/줌/색상만 남김 -->
                 <div class="sliders">
                     <div class="control-group" style="grid-column: span 2;">
                         <label>사진 확대 / 축소 (Zoom) <span id="zoom-val">100%</span></label>
