@@ -22,7 +22,7 @@
             <div class="canvas-wrapper">
                 <div class="canvas-container" id="canvas-area">
                     <img id="preview-img" class="canvas-image" src="" alt="Preview" style="display:none;">
-                    <!-- 텍스트 컨테이너: 버튼을 누르기 전까지 무조건 숨김 -->
+                    <!-- 텍스트 컨테이너: 초기에 절대 보이지 않음 -->
                     <div id="preview-text-container" class="text-container">
                         <span id="preview-text" class="canvas-text"></span>
                     </div>
@@ -33,15 +33,16 @@
             <div class="editor-controls">
                 <div class="control-group">
                     <label>이미지 업로드 (PNG/JPEG 전용)</label>
-                    <input type="file" id="image-upload" accept="image/png, image/jpeg" onchange="handleImageUpload(event)">
+                    <input type="file" id="image-upload" accept="image/png, image/jpeg">
                     <div class="validation-msg" id="file-msg"></div>
                 </div>
 
                 <div class="control-group">
                     <label>텍스트 편집</label>
                     <div style="display: flex; gap: 8px;">
-                        <button class="btn-secondary" onclick="addText()" style="flex: 1; white-space: nowrap;">+ 텍스트 추가</button>
-                        <input type="text" id="text-input" placeholder="문구를 입력하세요" oninput="updateText(event)" disabled style="flex: 3;">
+                        <!-- 버튼 ID 부여 -->
+                        <button id="btn-add-text" class="btn-secondary" style="flex: 1; white-space: nowrap;">+ 텍스트 추가</button>
+                        <input type="text" id="text-input" placeholder="문구를 입력하세요" disabled style="flex: 3;">
                     </div>
                     <div class="validation-msg" id="text-msg"></div>
                 </div>

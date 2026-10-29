@@ -7,11 +7,27 @@ let templates = [
 let isDragging = false;
 let currentXPercent = 50, currentYPercent = 50;
 
+// DOM이 로드되면 모든 이벤트 리스너 연결
 document.addEventListener('DOMContentLoaded', () => {
     initCard3Inputs();
     renderTemplates();
     setupDragAndDrop();
+    setupEventListeners(); // 이벤트 리스너 연결 함수 호출
 });
+
+// ==========================================
+// 이벤트 리스너 설정 (버튼 및 입력창)
+// ==========================================
+function setupEventListeners() {
+    // 1. 이미지 업로드 이벤트
+    document.getElementById('image-upload').addEventListener('change', handleImageUpload);
+
+    // 2. '+ 텍스트 추가' 버튼 클릭 이벤트 (확실한 연결)
+    document.getElementById('btn-add-text').addEventListener('click', addText);
+
+    // 3. 텍스트 입력창 입력 이벤트
+    document.getElementById('text-input').addEventListener('input', updateText);
+}
 
 // ==========================================
 // [Card 1, 2] 에디터, 이미지 및 드래그 제어
@@ -32,6 +48,9 @@ function handleImageUpload(event) {
     const imgEl = document.getElementById('preview-img');
     const phEl = document.getElementById('placeholder-text');
     const zoomSlider = document.getElementById('zoom-slider');
+    const textContainer = document.getElementById('preview-text-container');
+    const textInput = document.getElementById('text-input');
+    const textEl = document.getElementById('preview-text');
 
     if (!file) return;
 
@@ -57,11 +76,21 @@ function handleImageUpload(event) {
         document.getElementById('zoom-val').textContent = '100%';
         phEl.style.display = 'none';
         
-        // [핵심] 이미지 업로드 시 텍스트 컨테이너 무조건 숨김 및 초기화
-        document.getElementById('preview-text-container').classList.remove('show');
-        document.getElementById('preview-text').textContent = "";
-        document.getElementById('text-input').value = "";
-        document.getElementById('text-input').disabled = true;
+        // [핵심] 새로운 이미지를 올리면 텍스트 상자를 무조건 숨기고 초기화
+        textContainer.classList.remove('show');
+        textEl.textContent = "";
+        textInput.value = "";
+        textInput.disabled = true;
+        
+        // 텍스트 위치도 초기 중앙으로 리셋
+        currentXPercent = 50;
+        currentYPercent = 50;
+        textContainer.style.left = `50%`;
+        textContainer.style.top = `50%`;
+        document.getElementById('pos-x-slider').value = 50;
+        document.getElementById('pos-y-slider').value = 50;
+        document.getElementById('pos-x-val').textContent = '50%';
+        document.getElementById('pos-y-val').textContent = '50%';
     }
     reader.readAsDataURL(file);
 }
@@ -82,14 +111,10 @@ function addText() {
     textMsg.textContent = "";
     textContainer.classList.add('show'); // 텍스트 상자 보이기
     textInput.disabled = false;          // 입력창 활성화
-    textInput.focus();
+    textInput.focus();                   // 입력창에 커서 위치
     
-    // 텍스트가 없으면 빈칸으로 두지 않고 기본 텍스트 삽입 (원하시면 빈칸으로 두셔도 됩니다)
-    if (textInput.value.trim() === "") {
-        textInput.value = "새로운 텍스트";
-        document.getElementById('preview-text').textContent = textInput.value;
-        updateTextStyle(); 
-    }
+    // 만약 텍스트가 비어있다면 스타일 적용을 위해 빈 칸으로 둡니다.
+    // 사용자가 입력을 시작하면 바로 반영됩니다.
 }
 
 function updateImageZoom() {
@@ -102,7 +127,7 @@ function updateImageZoom() {
 // 텍스트 입력 시 즉시 반영
 function updateText(event) {
     const textEl = document.getElementById('preview-text');
-    // 빈 칸을 입력해도 '텍스트를 입력하세요' 같은 강제 문구가 나오지 않도록 수정
+    // 입력한 그대로 반영 (강제 문구 없음)
     textEl.textContent = event.target.value; 
 }
 
@@ -136,6 +161,7 @@ function setupDragAndDrop() {
     const posYSlider = document.getElementById('pos-y-slider');
 
     textContainer.addEventListener('mousedown', (e) => {
+        // 텍스트 컨테이너가 보일 때만 드래그 가능
         if (!textContainer.classList.contains('show')) return;
         isDragging = true;
         e.preventDefault(); 
@@ -286,7 +312,7 @@ function loadValidJson() {
     imgEl.classList.add('loaded');
     document.getElementById('placeholder-text').style.display = 'none';
     
-    // JSON 복원 시 텍스트 상자 강제 표시 및 내용 적용
+    // JSON 복원 시에만 텍스트 상자 표시 및 내용 적용
     const textContainer = document.getElementById('preview-text-container');
     const textEl = document.getElementById('preview-text');
     textContainer.classList.add('show');

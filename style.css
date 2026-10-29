@@ -95,7 +95,7 @@ body {
 }
 .canvas-image.loaded { opacity: 1; }
 
-/* 텍스트 컨테이너 - 초기 상태는 무조건 숨김(display: none) */
+/* [핵심] 텍스트 컨테이너는 기본적으로 완전히 숨겨둠 */
 .text-container {
     position: absolute;
     top: 50%;
@@ -103,16 +103,17 @@ body {
     transform: translate(-50%, -50%);
     z-index: 10;
     cursor: grab;
-    display: none;
+    display: none; /* 무조건 숨김 */
     user-select: none;
 }
 .text-container:active { cursor: grabbing; }
-.text-container.show { display: block; }
+.text-container.show { display: block; } /* show 클래스가 있을 때만 나타남 */
 
 .canvas-text {
     font-weight: bold;
     text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
     white-space: nowrap;
+    /* 글자가 없으면 공간을 차지하지 않도록 처리 (빈칸일때도 클릭 가능하게 하려면 min-width 필요할 수 있음) */
 }
 
 .placeholder { color: #999; font-weight: bold; z-index: 0; }
