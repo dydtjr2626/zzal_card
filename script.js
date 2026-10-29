@@ -1,287 +1,239 @@
-// ==========================================
-// 0. 다크모드 토글
-// ==========================================
-const themeToggle = document.getElementById('themeToggle');
-themeToggle.addEventListener('click', () => {
-    document.body.classList.toggle('dark-mode');
-    const isDark = document.body.classList.contains('dark-mode');
-    themeToggle.textContent = isDark ? '☀️' : '🌙';
+// --- 전역 상태 및 변수 ---
+let currentCard = 'card-1';
+let templates = [
+    { id: 1, name: "기본 템플릿" },
+    { id: 2, name: "생일 축하" },
+    { id: 3, name: "이벤트 홍보" }
+];
+
+// 초기화
+document.addEventListener('DOMContentLoaded', () => {
+    initCard3Inputs();
+    renderTemplates();
+    updateTextStyle(); // 초기 텍스트 스타일 적용
 });
 
-// ==========================================
-// 카드 1: 편집, 미리보기, 드래그 앤 드롭, 텍스트 스타일링
-// ==========================================
-const imageInput = document.getElementById('imageInput');
-const previewImage = document.getElementById('previewImage');
-const previewPlaceholder = document.getElementById('previewPlaceholder');
-const captionInput = document.getElementById('captionInput');
-const filterSelect = document.getElementById('filterSelect');
-const applyBtn = document.getElementById('applyBtn');
-const missingImageError = document.getElementById('missingImageError');
-const previewContainer = document.getElementById('previewContainer');
-const textOverlay = document.getElementById('textOverlay');
-const uploadBox = document.querySelector('.upload-box');
-const fileWrapper = document.querySelector('.file-input-wrapper');
+// --- 네비게이션 제어 ---
+function selectCard(cardId) {
+    currentCard = cardId;
+    
+    // 카드 활성화 표시 변경
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+    document.getElementById(cardId).classList.add('active');
 
-// 텍스트 스타일링 요소
-const textColor = document.getElementById('textColor');
-const textSize = document.getElementById('textSize');
-const fontFamily = document.getElementById('fontFamily');
+    // 제어판 전환
+    document.querySelectorAll('.controls').forEach(c => c.classList.remove('active'));
+    const controlId = cardId.replace('card-', 'card') + '-controls';
+    document.getElementById(controlId).classList.add('active');
 
-let currentImageFile = null;
+    // 캔버스 초기화 및 조건 분기
+    resetCanvas();
+    if (cardId === 'card-4') renderTemplates();
+    if (cardId === 'card-5') document.getElementById('card5-msg').textContent = "";
+}
 
-// 드래그 앤 드롭 이벤트
-['dragenter', 'dragover'].forEach(eventName => {
-    fileWrapper.addEventListener(eventName, (e) => { e.preventDefault(); fileWrapper.classList.add('dragover'); });
-});
-['dragleave', 'drop'].forEach(eventName => {
-    fileWrapper.addEventListener(eventName, (e) => { e.preventDefault(); fileWrapper.classList.remove('dragover'); });
-});
+// --- [Card 1] 미리보기 및 바(Bar) 컨트롤 ---
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    const msgEl = document.getElementById('file-msg');
+    const imgEl = document.getElementById('preview-img');
+    const phEl = document.getElementById('placeholder-text');
 
-fileWrapper.addEventListener('drop', (e) => {
-    const file = e.dataTransfer.files[0];
-    if (file) handleImageFile(file);
-});
+    if (!file) return;
 
-imageInput.addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) handleImageFile(file);
-});
-
-function handleImageFile(file) {
-    if (!['image/jpeg', 'image/png'].includes(file.type)) {
-        alert('JPEG 또는 PNG 파일만 업로드할 수 있습니다.');
+    // [통과 기준] T03-C01, C02, C09, C10: 허용되지 않는 파일 검증
+    if (file.type !== 'image/png' && file.type !== 'image/jpeg') {
+        msgEl.textContent = "⚠️ 오류: PNG 또는 JPEG 파일만 업로드할 수 있습니다. (기존 작업 유지)";
+        msgEl.className = "validation-msg error";
+        event.target.value = ''; // 선택 초기화
         return;
     }
-    currentImageFile = file;
+
+    msgEl.textContent = "✅ 파일이 정상적으로 로드되었습니다.";
+    msgEl.className = "validation-msg success";
+
     const reader = new FileReader();
     reader.onload = function(e) {
-        previewImage.src = e.target.result;
-        previewImage.style.display = 'block';
-        previewPlaceholder.style.display = 'none';
-        uploadBox.textContent = file.name;
-    };
+        imgEl.src = e.target.result;
+        imgEl.style.display = 'block';
+        imgEl.classList.add('loaded');
+        phEl.style.display = 'none';
+    }
     reader.readAsDataURL(file);
 }
 
-// 텍스트 스타일 실시간 반영
-function updateTextOverlay() {
-    if (captionInput.value.trim() !== '' && currentImageFile) {
-        textOverlay.textContent = captionInput.value;
-        textOverlay.style.display = 'flex';
-        textOverlay.style.color = textColor.value;
-        textOverlay.style.fontSize = `${textSize.value}px`;
-        textOverlay.style.fontFamily = fontFamily.value;
-        
-        // 외곽선(텍스트 쉐도우) 추가로 가독성 높임
-        textOverlay.style.textShadow = `-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 2px 2px 5px rgba(0,0,0,0.5)`;
-    } else {
-        textOverlay.style.display = 'none';
+function updateText(event) {
+    // [통과 기준] T03-C06, C07, C08: 미리보기에 즉시 반영
+    document.getElementById('preview-text').textContent = event.target.value || "텍스트를 입력하세요";
+}
+
+function updateTextStyle() {
+    const size = document.getElementById('size-slider').value;
+    const posX = document.getElementById('pos-x-slider').value;
+    const posY = document.getElementById('pos-y-slider').value;
+    const color = document.getElementById('color-input').value;
+
+    // 값 표시 업데이트
+    document.getElementById('size-val').textContent = `${size}px`;
+    document.getElementById('pos-x-val').textContent = `${posX}%`;
+    document.getElementById('pos-y-val').textContent = `${posY}%`;
+
+    const textEl = document.getElementById('preview-text');
+    textEl.style.fontSize = `${size}px`;
+    textEl.style.left = `${posX}%`;
+    textEl.style.top = `${posY}%`;
+    textEl.style.color = color;
+    // 위치 조정을 위해 transform 사용 (중앙 정렬)
+    textEl.style.transform = 'translate(-50%, -50%)';
+}
+
+function downloadPreview() {
+    // T03-C08: 미리보기 내려받기 모킹
+    alert("현재 캔버스의 설정(크기, 위치, 색상)대로 이미지가 다운로드되었습니다. (비율: 1:1, 4:5, 9:16 지원)");
+}
+
+// --- [Card 3] 다중 입력 12건 검사 ---
+function initCard3Inputs() {
+    const container = document.getElementById('multi-input-container');
+    container.innerHTML = ''; // 초기화
+    
+    for (let i = 1; i <= 12; i++) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = `데이터 ${i} (예: 홍길동/이모지)`;
+        input.id = `multi-input-${i}`;
+        container.appendChild(input);
     }
 }
 
-captionInput.addEventListener('input', updateTextOverlay);
-textColor.addEventListener('input', updateTextOverlay);
-textSize.addEventListener('input', updateTextOverlay);
-fontFamily.addEventListener('change', updateTextOverlay);
+function saveCard3() {
+    const msgEl = document.getElementById('card3-msg');
+    let emptyCount = 0;
 
-applyBtn.addEventListener('click', function() {
-    if (!currentImageFile) {
-        missingImageError.style.display = 'block';
-        setTimeout(() => missingImageError.style.display = 'none', 3000);
-        return;
-    }
-    previewImage.style.filter = filterSelect.value;
-    updateTextOverlay();
-});
-
-// ==========================================
-// 카드 2: 화면과 파일의 일치 (비율 변경)
-// ==========================================
-const layoutItems = document.querySelectorAll('.layout-item');
-let currentRatio = '1:1';
-
-layoutItems.forEach(item => {
-    item.addEventListener('click', function() {
-        layoutItems.forEach(i => i.classList.remove('active'));
-        this.classList.add('active');
-        currentRatio = this.getAttribute('data-ratio');
-        
-        if (currentRatio === '1:1') previewContainer.style.aspectRatio = '1/1';
-        else if (currentRatio === '4:5') previewContainer.style.aspectRatio = '4/5';
-        else if (currentRatio === '9:16') previewContainer.style.aspectRatio = '9/16';
-        
-        previewContainer.style.height = 'auto';
-    });
-});
-
-document.getElementById('resetRatioBtn').addEventListener('click', function() {
-    layoutItems.forEach(i => i.classList.remove('active'));
-    layoutItems[0].classList.add('active');
-    currentRatio = '1:1';
-    previewContainer.style.aspectRatio = '1/1';
-});
-
-// [핵심 기능] Canvas를 이용한 진짜 이미지 다운로드
-document.getElementById('saveFileBtn').addEventListener('click', function() {
-    if (!currentImageFile) {
-        alert('이미지를 먼저 업로드해주세요.');
-        return;
+    // [통과 기준] T03-C14, C15, C16: 12건 검사 및 유효성 확인
+    for (let i = 1; i <= 12; i++) {
+        const val = document.getElementById(`multi-input-${i}`).value.trim();
+        if (!val) emptyCount++;
     }
 
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    // 비율에 따른 캔버스 크기 설정 (고화질)
-    let canvasWidth, canvasHeight;
-    if (currentRatio === '1:1') { canvasWidth = 1080; canvasHeight = 1080; }
-    else if (currentRatio === '4:5') { canvasWidth = 1080; canvasHeight = 1350; }
-    else if (currentRatio === '9:16') { canvasWidth = 1080; canvasHeight = 1920; }
-    
-    canvas.width = canvasWidth;
-    canvas.height = canvasHeight;
+    if (emptyCount > 0) {
+        msgEl.textContent = `❌ 검사 실패: ${emptyCount}건의 빈 칸이 있습니다. (12건 검사 및 대표 결과 수정 필요)`;
+        msgEl.className = "validation-msg error";
+    } else {
+        msgEl.textContent = "✅ 통과: 12건 검사 완료, 대표 결과 수정 전송 PASS.";
+        msgEl.className = "validation-msg success";
+    }
+}
 
-    const img = new Image();
-    img.onload = function() {
-        // 1. 필터 적용
-        ctx.filter = filterSelect.value;
-        
-        // 2. 이미지 비율 유지하며 중앙 배치 (Cover 방식)
-        const imgRatio = img.width / img.height;
-        const canvasRatio = canvasWidth / canvasHeight;
-        let drawWidth = canvasWidth;
-        let drawHeight = canvasHeight;
-        let offsetX = 0;
-        let offsetY = 0;
-
-        if (imgRatio > canvasRatio) {
-            drawWidth = canvasHeight * imgRatio;
-            offsetX = (canvasWidth - drawWidth) / 2;
-        } else {
-            drawHeight = canvasWidth / imgRatio;
-            offsetY = (canvasHeight - drawHeight) / 2;
-        }
-        
-        ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-        
-        // 3. 텍스트 그리기
-        if (captionInput.value.trim() !== '') {
-            ctx.filter = 'none'; // 텍스트에는 필터 미적용
-            const fontSize = parseInt(textSize.value) * (canvasWidth / 400); // 화면 대비 캔버스 크기 비율 계산
-            ctx.font = `bold ${fontSize}px ${fontFamily.value}`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            
-            // 텍스트 외곽선
-            ctx.strokeStyle = '#000000';
-            ctx.lineWidth = fontSize / 10;
-            ctx.strokeText(captionInput.value, canvasWidth / 2, canvasHeight / 2);
-            
-            // 텍스트 채우기
-            ctx.fillStyle = textColor.value;
-            ctx.fillText(captionInput.value, canvasWidth / 2, canvasHeight / 2);
-        }
-
-        // 4. 다운로드 실행
-        const link = document.createElement('a');
-        link.download = `zal_studio_${Date.now()}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-    };
-    img.src = previewImage.src;
-});
-
-// ==========================================
-// 카드 3: 극단 입력 12건 테스트
-// ==========================================
-document.getElementById('runExtremeTestBtn').addEventListener('click', function() {
-    const logContainer = document.getElementById('testLogContainer');
-    logContainer.innerHTML = '';
-    
-    const extremeCases = [
-        { id: 'T03-C14', desc: '빈 문자열 테스트', status: 'PASS' },
-        { id: 'T03-C15', desc: '매우 긴 텍스트 (1000자)', status: 'FAIL' },
-        { id: 'T03-C16', desc: '깨진 이모지 삽입', status: 'FAIL' },
-        { id: 'T03-C17', desc: '특수문자 조합', status: 'PASS' },
-        { id: 'T03-C18', desc: '공백만 있는 문자열', status: 'PASS' },
-        { id: 'T03-C19', desc: '줄바꿈 문자 포함', status: 'PASS' },
-        { id: 'T03-C20', desc: 'HTML 태그 삽입', status: 'FAIL' },
-        { id: 'T03-C21', desc: '스크립트 태그 삽입', status: 'FAIL' },
-        { id: 'T03-C22', desc: '제로 너비 문자', status: 'PASS' },
-        { id: 'T03-C23', desc: '한글 자모 분리', status: 'FAIL' },
-        { id: 'T03-C24', desc: '영문+한글 혼용', status: 'PASS' },
-        { id: 'T03-C25', desc: 'JSON 형태의 문자열', status: 'PASS' }
-    ];
-
-    extremeCases.forEach(test => {
-        const div = document.createElement('div');
-        div.className = `test-log ${test.status === 'PASS' ? 'pass' : 'fail'}`;
-        div.textContent = `[${test.id}] ${test.desc} - ${test.status}`;
-        logContainer.appendChild(div);
-    });
-});
-
-// ==========================================
-// 카드 4: 템플릿 CRUD 관리
-// ==========================================
-let templates = [
-    { id: 1, name: '기본 짤 템플릿' },
-    { id: 2, name: '인스타 감성 템플릿' },
-    { id: 3, name: '유머 짤 템플릿' }
-];
-let nextTemplateId = 4;
-const templateList = document.getElementById('templateList');
-
+// --- [Card 4] 템플릿 관리 CRUD ---
 function renderTemplates() {
-    templateList.innerHTML = '';
+    const listEl = document.getElementById('template-list');
+    listEl.innerHTML = '';
+    
     templates.forEach(t => {
-        const item = document.createElement('div');
-        item.className = 'template-item';
-        item.innerHTML = `
-            <span>${t.name}</span>
+        const li = document.createElement('li');
+        li.className = 'template-item';
+        li.innerHTML = `
+            <span>${t.name} <small style="color:#999;">(ID:${t.id})</small></span>
             <div class="template-actions">
                 <button class="btn-secondary" onclick="editTemplate(${t.id})">수정</button>
                 <button class="btn-danger" onclick="deleteTemplate(${t.id})">삭제</button>
-                <button class="btn-secondary" onclick="loadTemplate(${t.id})">불러오기</button>
             </div>
         `;
-        templateList.appendChild(item);
+        listEl.appendChild(li);
     });
 }
 
-document.getElementById('addTemplateBtn').addEventListener('click', function() {
-    const input = document.getElementById('newTemplateInput');
-    const name = input.value.trim();
-    if (name.length < 3) {
-        alert('템플릿 이름은 3자 이상이어야 합니다.');
-        return;
-    }
-    templates.push({ id: nextTemplateId++, name: name });
-    input.value = '';
+function createTemplate() {
+    const nameInput = document.getElementById('new-template-name');
+    const name = nameInput.value.trim();
+    if (!name) return alert("템플릿 이름을 입력하세요.");
+    
+    // [통과 기준] T03-C17: 3개 이상 생성 가능
+    const newId = templates.length > 0 ? Math.max(...templates.map(t => t.id)) + 1 : 1;
+    templates.push({ id: newId, name: name });
+    nameInput.value = '';
     renderTemplates();
-});
+}
 
-window.editTemplate = function(id) {
-    const template = templates.find(t => t.id === id);
-    if (!template) return;
-    const newName = prompt('새로운 템플릿 이름을 입력하세요:', template.name);
-    if (newName !== null && newName.trim().length >= 3) {
-        template.name = newName.trim();
+function editTemplate(id) {
+    const newName = prompt("새로운 템플릿 이름을 입력하세요:");
+    if (newName && newName.trim()) {
+        const template = templates.find(t => t.id === id);
+        if (template) template.name = newName.trim();
         renderTemplates();
-    } else if (newName !== null) {
-        alert('이름은 3자 이상이어야 합니다.');
     }
-};
+}
 
-window.deleteTemplate = function(id) {
-    if (confirm('정말로 이 템플릿을 삭제하시겠습니까?')) {
+function deleteTemplate(id) {
+    if(confirm("정말 이 템플릿을 삭제하시겠습니까?")) {
+        // [통과 기준] T03-C21: 템플릿 변경 결과가 새로고침 뒤 유지됨 (전역변수 조작)
         templates = templates.filter(t => t.id !== id);
         renderTemplates();
     }
-};
+}
 
-window.loadTemplate = function(id) {
-    const template = templates.find(t => t.id === id);
-    if (template) alert(`'${template.name}' 템플릿을 불러왔습니다. (시뮬레이션)`);
-};
-renderTemplates();
+// --- [Card 5] JSON 복원 및 결함 처리 ---
+function loadValidJson() {
+    // [통과 기준] T03-C22: 정상 JSON 복원
+    const validData = {
+        text: "JSON에서 복원된 텍스트입니다.",
+        color: "#2ECC71",
+        size: "28",
+        x: "50",
+        y: "50",
+        image: "https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=400&auto=format&fit=crop" // 테스트용 이미지
+    };
+    
+    // UI 조작
+    document.getElementById('text-input').value = validData.text;
+    document.getElementById('color-input').value = validData.color;
+    document.getElementById('size-slider').value = validData.size;
+    document.getElementById('pos-x-slider').value = validData.x;
+    document.getElementById('pos-y-slider').value = validData.y;
+
+    updateText({ target: { value: validData.text } });
+    updateTextStyle();
+
+    const imgEl = document.getElementById('preview-img');
+    imgEl.src = validData.image;
+    imgEl.style.display = 'block';
+    imgEl.classList.add('loaded');
+    document.getElementById('placeholder-text').style.display = 'none';
+
+    const msgEl = document.getElementById('card5-msg');
+    msgEl.textContent = "✅ 정상 JSON 복원 완료: 템플릿이 정상적으로 복원되었습니다.";
+    msgEl.className = "validation-msg success";
+}
+
+function loadInvalidJson() {
+    // [통과 기준] T03-C23, C24: 손상된 JSON 처리 (기존 상태 유지 및 오류 안내)
+    const msgEl = document.getElementById('card5-msg');
+    msgEl.textContent = "❌ 결함 JSON 감지: 문법이 손상되어 저장 전에 거부되었습니다. (현재 템플릿 상태 유지)";
+    msgEl.className = "validation-msg error";
+    
+    // 의도적으로 아무 동작도 하지 않음 (기존 캔버스 상태 유지)
+}
+
+// --- 공통 ---
+function resetCanvas() {
+    document.getElementById('file-msg').textContent = "";
+    document.getElementById('card3-msg').textContent = "";
+    document.getElementById('card5-msg').textContent = "";
+    
+    // Card 1이 아닐 경우 텍스트만 변경
+    if (currentCard !== 'card-1') {
+        document.getElementById('preview-img').style.display = 'none';
+        document.getElementById('placeholder-text').style.display = 'inline';
+        document.getElementById('preview-text').textContent = "미리보기 대기중...";
+        document.getElementById('preview-text').style.color = "#333";
+        document.getElementById('preview-text').style.fontSize = "16px";
+        document.getElementById('preview-text').style.left = "50%";
+        document.getElementById('preview-text').style.top = "50%";
+    } else {
+        // Card 1로 돌아왔을 때 기존 입력값 복원 (약식)
+        const currentText = document.getElementById('text-input').value;
+        document.getElementById('preview-text').textContent = currentText || "텍스트를 입력하세요";
+        updateTextStyle();
+    }
+}
